@@ -213,7 +213,7 @@ public static class CodexUnityBridge
 
     private static void ApplyBoxCollider2DSettings(Component component, BoxCollider2DSettings settings)
     {
-        if (settings == null)
+        if (!HasBoxCollider2DSettings(settings))
             return;
 
         var boxCollider = component as BoxCollider2D;
@@ -233,7 +233,7 @@ public static class CodexUnityBridge
 
     private static void ApplyRigidbody2DSettings(Component component, Rigidbody2DSettings settings)
     {
-        if (settings == null)
+        if (!HasRigidbody2DSettings(settings))
             return;
 
         var rigidbody = component as Rigidbody2D;
@@ -255,7 +255,7 @@ public static class CodexUnityBridge
 
     private static void ApplySpriteRendererSettings(Component component, SpriteRendererSettings settings)
     {
-        if (settings == null)
+        if (!HasSpriteRendererSettings(settings))
             return;
 
         var spriteRenderer = component as SpriteRenderer;
@@ -276,6 +276,24 @@ public static class CodexUnityBridge
 
         if (settings.setSortingOrder)
             spriteRenderer.sortingOrder = settings.sortingOrder;
+    }
+
+    private static bool HasBoxCollider2DSettings(BoxCollider2DSettings settings)
+    {
+        return settings != null &&
+            (settings.setIsTrigger || settings.setSize || settings.setOffset);
+    }
+
+    private static bool HasRigidbody2DSettings(Rigidbody2DSettings settings)
+    {
+        return settings != null &&
+            (settings.setBodyType || settings.setGravityScale || settings.setConstraints);
+    }
+
+    private static bool HasSpriteRendererSettings(SpriteRendererSettings settings)
+    {
+        return settings != null &&
+            (settings.setSortingLayerName || settings.setSortingOrder);
     }
 
     private static void ApplyFieldRequests(Component component, FieldValueRequest[] fields)
