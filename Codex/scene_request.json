@@ -1,6 +1,118 @@
 {
   "scenePath": "Assets/asd.unity",
-  "saveScene": true,
+  "saveScene": false,
   "allowProtectedSampleScene": false,
-  "objectsToCreate": []
+  "objectsToCreate": [],
+  "_note": "Copy an entry from _exampleObjectsToCreate into objectsToCreate only when you intentionally want to test object creation.",
+  "_exampleObjectsToCreate": [
+    {
+      "name": "_CodexBridgeExample",
+      "parentPath": "",
+      "replaceIfExists": true,
+      "position": {
+        "x": 0,
+        "y": 3,
+        "z": 0
+      },
+      "rotationEuler": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "layerName": "Default",
+      "tag": "Untagged",
+      "components": [
+        {
+          "type": "Transform",
+          "fields": [
+            {
+              "name": "localScale",
+              "valueType": "Vector3",
+              "vector3Value": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "BoxCollider2D",
+          "setEnabled": true,
+          "enabled": true,
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": true,
+            "setSize": true,
+            "size": {
+              "x": 1.5,
+              "y": 0.75
+            },
+            "setOffset": true,
+            "offset": {
+              "x": 0,
+              "y": 0.25
+            }
+          }
+        },
+        {
+          "type": "Rigidbody2D",
+          "rigidbody2D": {
+            "setBodyType": true,
+            "bodyType": "Dynamic",
+            "setGravityScale": true,
+            "gravityScale": 1,
+            "setConstraints": true,
+            "constraints": "FreezeRotation"
+          },
+          "fields": [
+            {
+              "name": "simulated",
+              "valueType": "bool",
+              "boolValue": true
+            },
+            {
+              "name": "gravityScale",
+              "valueType": "float",
+              "floatValue": 1
+            },
+            {
+              "name": "position",
+              "valueType": "Vector2",
+              "vector2Value": {
+                "x": 0,
+                "y": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "SpriteRenderer",
+          "spriteRenderer": {
+            "setSortingLayerName": true,
+            "sortingLayerName": "Default",
+            "setSortingOrder": true,
+            "sortingOrder": 5
+          },
+          "fields": [
+            {
+              "name": "sortingLayerName",
+              "valueType": "string",
+              "stringValue": "Default"
+            },
+            {
+              "name": "sortingOrder",
+              "valueType": "int",
+              "intValue": 5
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
