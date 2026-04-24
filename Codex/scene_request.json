@@ -1,116 +1,50 @@
 {
   "scenePath": "Assets/asd.unity",
-  "saveScene": false,
+  "saveScene": true,
   "allowProtectedSampleScene": false,
-  "objectsToCreate": [],
-  "_note": "Copy an entry from _exampleObjectsToCreate into objectsToCreate only when you intentionally want to test object creation.",
-  "_exampleObjectsToCreate": [
+  "objectsToCreate": [
     {
-      "name": "_CodexBridgeExample",
+      "name": "player",
       "parentPath": "",
       "replaceIfExists": true,
       "position": {
-        "x": 0,
-        "y": 3,
-        "z": 0
+        "x": -10.56,
+        "y": 1.77,
+        "z": 0.0
       },
       "rotationEuler": {
-        "x": 0,
-        "y": 0,
-        "z": 0
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
       },
       "scale": {
-        "x": 1,
-        "y": 1,
-        "z": 1
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
       },
-      "layerName": "Default",
+      "layerName": "Player",
       "tag": "Untagged",
       "components": [
-        {
-          "type": "Transform",
-          "fields": [
-            {
-              "name": "localScale",
-              "valueType": "Vector3",
-              "vector3Value": {
-                "x": 1,
-                "y": 1,
-                "z": 1
-              }
-            }
-          ]
-        },
-        {
-          "type": "BoxCollider2D",
-          "setEnabled": true,
-          "enabled": true,
-          "boxCollider2D": {
-            "setIsTrigger": true,
-            "isTrigger": true,
-            "setSize": true,
-            "size": {
-              "x": 1.5,
-              "y": 0.75
-            },
-            "setOffset": true,
-            "offset": {
-              "x": 0,
-              "y": 0.25
-            }
-          }
-        },
         {
           "type": "Rigidbody2D",
           "rigidbody2D": {
             "setBodyType": true,
             "bodyType": "Dynamic",
             "setGravityScale": true,
-            "gravityScale": 1,
+            "gravityScale": 1.0,
             "setConstraints": true,
             "constraints": "FreezeRotation"
-          },
-          "fields": [
-            {
-              "name": "simulated",
-              "valueType": "bool",
-              "boolValue": true
-            },
-            {
-              "name": "gravityScale",
-              "valueType": "float",
-              "floatValue": 1
-            },
-            {
-              "name": "position",
-              "valueType": "Vector2",
-              "vector2Value": {
-                "x": 0,
-                "y": 3
-              }
-            }
-          ]
+          }
         },
         {
-          "type": "SpriteRenderer",
-          "spriteRenderer": {
-            "setSortingLayerName": true,
-            "sortingLayerName": "Default",
-            "setSortingOrder": true,
-            "sortingOrder": 5
-          },
-          "fields": [
-            {
-              "name": "sortingLayerName",
-              "valueType": "string",
-              "stringValue": "Default"
-            },
-            {
-              "name": "sortingOrder",
-              "valueType": "int",
-              "intValue": 5
-            }
-          ]
+          "type": "PlayerMoverRB",
+          "setEnabled": true,
+          "enabled": false
+        },
+        {
+          "type": "ChallengePlayerController",
+          "setEnabled": true,
+          "enabled": true
         }
       ]
     }

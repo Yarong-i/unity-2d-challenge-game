@@ -1495,6 +1495,7 @@ GameObject:
   - component: {fileID: 1532753829}
   - component: {fileID: 1532753830}
   - component: {fileID: 1532753831}
+  - component: {fileID: 1532753832}
   m_Layer: 7
   m_Name: player
   m_TagString: Untagged
@@ -1509,7 +1510,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1532753822}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 53577b16434428545ab903badc97e067, type: 3}
   m_Name: 
@@ -1560,7 +1561,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!61 &1532753825
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1756,6 +1757,30 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1532753832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1532753822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a9cde595b7ab10478dd6c3701e9f6de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stableSpeedThreshold: 0.35
+  groundedCheckDistance: 0.12
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  footInset: 0.05
+  maxChargeTime: 0.45
+  minLaunchForce: 4.5
+  maxLaunchForce: 13
+  maxDragDistance: 3.25
+  airControlMultiplier: 0.08
+  playerAnimator: {fileID: 1532753830}
 --- !u!1 &1664468939
 GameObject:
   m_ObjectHideFlags: 0
