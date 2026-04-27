@@ -39,9 +39,29 @@ public class ChallengePlayerController : MonoBehaviour
     [SerializeField] private float stableHorizontalSpeedThreshold = 1.10f;
     [SerializeField] private float stableVerticalSpeedThreshold = 0.45f;
     [SerializeField] private float stableSettleTime = 0.22f;
+    [SerializeField] private float stableContactSettleTime = 0.12f;
+    [SerializeField] private float stableContactGraceTime = 0.12f;
+    [SerializeField] private float edgeStableHorizontalSpeedThreshold = 1.20f;
+    [SerializeField] private float edgeStableVerticalSpeedThreshold = 0.55f;
+    [SerializeField] private float minStableContactNormalY = 0.25f;
+    [SerializeField] private bool allowEdgeContactStable = true;
+    [SerializeField] private bool showStableDebug = true;
     [SerializeField] private float groundedCheckDistance = 0.14f;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float footInset = 0.05f;
+
+    [Header("Wall Collision")]
+    [SerializeField] private bool enableWallBounce = true;
+    [SerializeField] private float minWallBounceSpeed = 0.75f;
+    [SerializeField] private float wallBounceMultiplier = 0.55f;
+    [SerializeField] private float wallBounceUpwardBoost = 0.30f;
+    [SerializeField] private float maxWallBounceSpeed = 4.8f;
+    [SerializeField] private float minWallNormalAbsX = 0.60f;
+    [SerializeField] private float maxWallNormalY = 0.40f;
+    [SerializeField] private float wallBounceCooldown = 0.10f;
+    [SerializeField] private float wallDetachSpeed = 1.15f;
+    [SerializeField] private float wallStableLockoutTime = 0.18f;
+    [SerializeField] private bool useRuntimeNoFrictionMaterial = true;
 
     [Header("Ground Movement")]
     [SerializeField] private float groundDeceleration = 70f;
@@ -75,18 +95,29 @@ public class ChallengePlayerController : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private Camera cachedCamera;
     private Material runtimePreviewMaterial;
+    private PhysicsMaterial2D runtimeNoFrictionMaterial;
 
     private MovementState state = MovementState.Airborne;
     private float horizontalInput;
     private float chargeTimer;
     private float stableSettleTimer;
     private float groundedStabilityGraceTimer;
+    private float stableContactSettleTimer;
+    private float stableContactGraceTimer;
+    private float wallBounceCooldownTimer;
+    private float wallStableLockoutTimer;
     private bool isGrounded;
+    private bool hasStableGroundContact;
+    private bool hasEdgeStableGroundContact;
+    private bool hasWallContact;
     private bool launchQueued;
     private Vector2 dragStartWorld;
     private Vector2 currentMouseWorld;
+    private Vector2 preCollisionVelocity;
+    private Vector2 wallContactNormal;
     private Vector2 queuedLaunchDirection = Vector2.left;
     private float queuedLaunchForce;
+    private readonly ContactPoint2D[] groundContacts = new ContactPoint2D[8];
 
     public bool IsStable => state == MovementState.Stable;
     public bool IsCharging => state == MovementState.Charging;
@@ -113,8 +144,23 @@ public class ChallengePlayerController : MonoBehaviour
         stableHorizontalSpeedThreshold = Mathf.Max(0f, stableHorizontalSpeedThreshold);
         stableVerticalSpeedThreshold = Mathf.Max(0f, stableVerticalSpeedThreshold);
         stableSettleTime = Mathf.Max(0.01f, stableSettleTime);
+        stableContactSettleTime = Mathf.Max(0.01f, stableContactSettleTime);
+        stableContactGraceTime = Mathf.Max(0f, stableContactGraceTime);
+        edgeStableHorizontalSpeedThreshold = Mathf.Max(0f, edgeStableHorizontalSpeedThreshold);
+        edgeStableVerticalSpeedThreshold = Mathf.Max(0f, edgeStableVerticalSpeedThreshold);
+        minStableContactNormalY = Mathf.Clamp(minStableContactNormalY, -1f, 1f);
         groundedCheckDistance = Mathf.Max(0.01f, groundedCheckDistance);
         footInset = Mathf.Max(0f, footInset);
+
+        minWallBounceSpeed = Mathf.Max(0f, minWallBounceSpeed);
+        wallBounceMultiplier = Mathf.Max(0f, wallBounceMultiplier);
+        wallBounceUpwardBoost = Mathf.Max(0f, wallBounceUpwardBoost);
+        maxWallBounceSpeed = Mathf.Max(0f, maxWallBounceSpeed);
+        minWallNormalAbsX = Mathf.Clamp01(minWallNormalAbsX);
+        maxWallNormalY = Mathf.Clamp(maxWallNormalY, -1f, 1f);
+        wallBounceCooldown = Mathf.Max(0f, wallBounceCooldown);
+        wallDetachSpeed = Mathf.Max(0f, wallDetachSpeed);
+        wallStableLockoutTime = Mathf.Max(0f, wallStableLockoutTime);
 
         groundDeceleration = Mathf.Max(0f, groundDeceleration);
         stopSnapSpeed = Mathf.Max(0f, stopSnapSpeed);
@@ -136,6 +182,7 @@ public class ChallengePlayerController : MonoBehaviour
     {
         CacheReferences();
         UpgradeLegacyValuesIfNeeded();
+        ApplyRuntimeNoFrictionMaterial();
         EnsurePreviewLine();
         HideChargePreview();
     }
@@ -147,6 +194,8 @@ public class ChallengePlayerController : MonoBehaviour
 
         RefreshGrounding();
         groundedStabilityGraceTimer = isGrounded ? GroundedStabilityGraceTime : 0f;
+        stableContactGraceTimer = HasContactStableCandidate() ? stableContactGraceTime : 0f;
+        stableContactSettleTimer = HasContactStableCandidate() ? stableContactSettleTime : 0f;
         stableSettleTimer = CanSettleIntoStable() ? stableSettleTime : 0f;
         state = CanEnterStableState() ? MovementState.Stable : MovementState.Airborne;
         UpdateAnimatorState();
@@ -175,12 +224,14 @@ public class ChallengePlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         RefreshGrounding();
+        UpdateWallTimers(Time.fixedDeltaTime);
 
         if (health != null && health.IsHurt)
         {
             CancelCharge();
             UpdateGroundedStabilityGrace(Time.fixedDeltaTime);
             state = ComputeMovementState(Time.fixedDeltaTime);
+            StorePreCollisionVelocity();
             UpdateAnimatorState();
             return;
         }
@@ -188,6 +239,7 @@ public class ChallengePlayerController : MonoBehaviour
         if (launchQueued)
         {
             ExecuteQueuedLaunch();
+            StorePreCollisionVelocity();
             UpdateAnimatorState();
             return;
         }
@@ -210,7 +262,18 @@ public class ChallengePlayerController : MonoBehaviour
         if (state != MovementState.Charging)
             state = ComputeMovementState(Time.fixedDeltaTime);
 
+        StorePreCollisionVelocity();
         UpdateAnimatorState();
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        TryApplyWallBounce(collision);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        TryApplyWallBounce(collision);
     }
 
     private void OnDisable()
@@ -221,12 +284,17 @@ public class ChallengePlayerController : MonoBehaviour
     private void OnDestroy()
     {
         if (runtimePreviewMaterial == null)
+        {
+            DestroyRuntimeNoFrictionMaterial();
             return;
+        }
 
         if (Application.isPlaying)
             Destroy(runtimePreviewMaterial);
         else
             DestroyImmediate(runtimePreviewMaterial);
+
+        DestroyRuntimeNoFrictionMaterial();
     }
 
     private void BeginCharge()
@@ -284,6 +352,12 @@ public class ChallengePlayerController : MonoBehaviour
         if (isGrounded)
             groundedStabilityGraceTimer = GroundedStabilityGraceTime;
 
+        if (HasContactStableCandidate())
+        {
+            stableContactGraceTimer = stableContactGraceTime;
+            stableContactSettleTimer = stableContactSettleTime;
+        }
+
         if (CanSettleIntoStable())
             stableSettleTimer = stableSettleTime;
 
@@ -296,6 +370,10 @@ public class ChallengePlayerController : MonoBehaviour
         launchQueued = true;
         stableSettleTimer = 0f;
         groundedStabilityGraceTimer = 0f;
+        stableContactSettleTimer = 0f;
+        stableContactGraceTimer = 0f;
+        wallBounceCooldownTimer = 0f;
+        wallStableLockoutTimer = 0f;
         state = MovementState.Airborne;
         HideChargePreview();
     }
@@ -306,6 +384,10 @@ public class ChallengePlayerController : MonoBehaviour
         chargeTimer = 0f;
         stableSettleTimer = 0f;
         groundedStabilityGraceTimer = 0f;
+        stableContactSettleTimer = 0f;
+        stableContactGraceTimer = 0f;
+        wallBounceCooldownTimer = 0f;
+        wallStableLockoutTimer = 0f;
 
         rb.linearVelocity = Vector2.zero;
         rb.AddForce(queuedLaunchDirection * queuedLaunchForce, ForceMode2D.Impulse);
@@ -348,9 +430,15 @@ public class ChallengePlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(newHorizontalVelocity, rb.linearVelocity.y);
     }
 
+    private void StorePreCollisionVelocity()
+    {
+        preCollisionVelocity = rb.linearVelocity;
+    }
+
     private void RefreshGrounding()
     {
         isGrounded = CheckGrounded();
+        RefreshGroundContacts();
     }
 
     private void UpdateGroundedStabilityGrace(float deltaTime)
@@ -367,11 +455,17 @@ public class ChallengePlayerController : MonoBehaviour
     private MovementState ComputeMovementState(float deltaTime)
     {
         UpdateStableSettleTimer(deltaTime);
-        return CanEnterStableState() ? MovementState.Stable : MovementState.Airborne;
+        bool canEnterStable = CanEnterStableState();
+        if (canEnterStable)
+            ApplyStableVelocityCleanup(deltaTime);
+
+        return canEnterStable ? MovementState.Stable : MovementState.Airborne;
     }
 
     private void UpdateStableSettleTimer(float deltaTime)
     {
+        UpdateStableContactTimers(deltaTime);
+
         if (CanSettleIntoStable())
         {
             stableSettleTimer = Mathf.Min(stableSettleTime, stableSettleTimer + deltaTime);
@@ -384,22 +478,221 @@ public class ChallengePlayerController : MonoBehaviour
 
     private bool HasGroundContactForStability()
     {
-        return isGrounded || groundedStabilityGraceTimer > 0f;
+        return isGrounded || groundedStabilityGraceTimer > 0f || HasSettledContactForStability();
     }
 
     private bool CanSettleIntoStable()
     {
+        if (wallStableLockoutTimer > 0f)
+            return false;
+
         if (!HasGroundContactForStability())
             return false;
 
+        if (hasWallContact && !hasEdgeStableGroundContact && !isGrounded && groundedStabilityGraceTimer <= 0f)
+            return false;
+
         Vector2 velocity = rb.linearVelocity;
-        return Mathf.Abs(velocity.x) <= stableHorizontalSpeedThreshold &&
-            Mathf.Abs(velocity.y) <= stableVerticalSpeedThreshold;
+        if (isGrounded || groundedStabilityGraceTimer > 0f || hasStableGroundContact)
+        {
+            return Mathf.Abs(velocity.x) <= stableHorizontalSpeedThreshold &&
+                Mathf.Abs(velocity.y) <= stableVerticalSpeedThreshold;
+        }
+
+        return HasSettledContactForStability() &&
+            Mathf.Abs(velocity.x) <= edgeStableHorizontalSpeedThreshold &&
+            Mathf.Abs(velocity.y) <= edgeStableVerticalSpeedThreshold;
     }
 
     private bool CanEnterStableState()
     {
         return HasGroundContactForStability() && stableSettleTimer >= stableSettleTime;
+    }
+
+    private void UpdateStableContactTimers(float deltaTime)
+    {
+        bool contactCandidate = HasContactStableCandidate();
+        if (contactCandidate)
+        {
+            stableContactSettleTimer = Mathf.Min(stableContactSettleTime, stableContactSettleTimer + deltaTime);
+            stableContactGraceTimer = stableContactSettleTimer >= stableContactSettleTime
+                ? stableContactGraceTime
+                : 0f;
+            return;
+        }
+
+        stableContactGraceTimer = Mathf.Max(0f, stableContactGraceTimer - deltaTime);
+        if (stableContactGraceTimer <= 0f)
+            stableContactSettleTimer = 0f;
+    }
+
+    private bool HasContactStableCandidate()
+    {
+        if (hasStableGroundContact)
+            return true;
+
+        return allowEdgeContactStable &&
+            hasEdgeStableGroundContact &&
+            IsMovingSlowEnoughForEdgeStable();
+    }
+
+    private bool HasSettledContactForStability()
+    {
+        return stableContactSettleTimer >= stableContactSettleTime || stableContactGraceTimer > 0f;
+    }
+
+    private bool IsMovingSlowEnoughForEdgeStable()
+    {
+        Vector2 velocity = rb.linearVelocity;
+        return Mathf.Abs(velocity.x) <= edgeStableHorizontalSpeedThreshold &&
+            Mathf.Abs(velocity.y) <= edgeStableVerticalSpeedThreshold;
+    }
+
+    private void ApplyStableVelocityCleanup(float deltaTime)
+    {
+        Vector2 velocity = rb.linearVelocity;
+        if (velocity.sqrMagnitude <= stopSnapSpeed * stopSnapSpeed)
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        float newHorizontalVelocity = Mathf.MoveTowards(velocity.x, 0f, groundDeceleration * deltaTime);
+        if (Mathf.Abs(newHorizontalVelocity) <= stopSnapSpeed)
+            newHorizontalVelocity = 0f;
+
+        float newVerticalVelocity = Mathf.MoveTowards(velocity.y, 0f, groundDeceleration * deltaTime);
+        if (Mathf.Abs(newVerticalVelocity) <= stopSnapSpeed)
+            newVerticalVelocity = 0f;
+
+        rb.linearVelocity = new Vector2(newHorizontalVelocity, newVerticalVelocity);
+    }
+
+    private void RefreshGroundContacts()
+    {
+        hasStableGroundContact = false;
+        hasEdgeStableGroundContact = false;
+        hasWallContact = false;
+        wallContactNormal = Vector2.zero;
+
+        if (rb == null || col == null)
+            return;
+
+        int contactCount = rb.GetContacts(groundContacts);
+        Bounds bounds = col.bounds;
+        float edgeContactMaxY = bounds.min.y + Mathf.Max(groundedCheckDistance * 2f, bounds.size.y * 0.35f);
+
+        for (int i = 0; i < contactCount; i++)
+        {
+            ContactPoint2D contact = groundContacts[i];
+            if (contact.collider == null || !IsInGroundLayer(contact.collider.gameObject.layer))
+                continue;
+
+            bool isWallContact = IsWallContactNormal(contact.normal);
+            if (isWallContact)
+            {
+                hasWallContact = true;
+                if (Mathf.Abs(contact.normal.x) > Mathf.Abs(wallContactNormal.x))
+                    wallContactNormal = contact.normal;
+            }
+
+            if (!isWallContact && contact.normal.y >= minStableContactNormalY)
+            {
+                hasStableGroundContact = true;
+                continue;
+            }
+
+            bool isLowEdgeContact = !isWallContact &&
+                contact.point.y <= edgeContactMaxY &&
+                contact.normal.y >= -0.05f;
+            if (isLowEdgeContact)
+                hasEdgeStableGroundContact = true;
+        }
+    }
+
+    private void UpdateWallTimers(float deltaTime)
+    {
+        wallBounceCooldownTimer = Mathf.Max(0f, wallBounceCooldownTimer - deltaTime);
+        wallStableLockoutTimer = Mathf.Max(0f, wallStableLockoutTimer - deltaTime);
+    }
+
+    private void TryApplyWallBounce(Collision2D collision)
+    {
+        if (!enableWallBounce || state != MovementState.Airborne || isGrounded || wallBounceCooldownTimer > 0f)
+            return;
+
+        if (collision.collider == null || !IsInGroundLayer(collision.collider.gameObject.layer))
+            return;
+
+        Vector2 incomingVelocity = preCollisionVelocity;
+        float speed = incomingVelocity.magnitude;
+        if (speed < minWallBounceSpeed)
+            return;
+
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            ContactPoint2D contact = collision.GetContact(i);
+            if (TryGetWallBounceNormal(contact.normal, incomingVelocity, out Vector2 bounceNormal))
+            {
+                ApplyWallBounce(incomingVelocity, bounceNormal);
+                return;
+            }
+        }
+    }
+
+    private void ApplyWallBounce(Vector2 incomingVelocity, Vector2 bounceNormal)
+    {
+        Vector2 bouncedVelocity = Vector2.Reflect(incomingVelocity, bounceNormal) * wallBounceMultiplier;
+        bouncedVelocity += Vector2.up * wallBounceUpwardBoost;
+        bouncedVelocity = EnsureMinimumDetachVelocity(bouncedVelocity, bounceNormal);
+
+        rb.linearVelocity = bouncedVelocity;
+        wallBounceCooldownTimer = wallBounceCooldown;
+        wallStableLockoutTimer = wallStableLockoutTime;
+        stableSettleTimer = 0f;
+        stableContactSettleTimer = 0f;
+        stableContactGraceTimer = 0f;
+        groundedStabilityGraceTimer = 0f;
+        state = MovementState.Airborne;
+    }
+
+    private bool TryGetWallBounceNormal(Vector2 contactNormal, Vector2 incomingVelocity, out Vector2 bounceNormal)
+    {
+        bounceNormal = contactNormal.normalized;
+        if (!IsWallContactNormal(bounceNormal))
+            return false;
+
+        float normalVelocity = Vector2.Dot(incomingVelocity, bounceNormal);
+        if (normalVelocity > 0f)
+        {
+            bounceNormal = -bounceNormal;
+            normalVelocity = Vector2.Dot(incomingVelocity, bounceNormal);
+        }
+
+        return normalVelocity < 0f;
+    }
+
+    private Vector2 EnsureMinimumDetachVelocity(Vector2 velocity, Vector2 wallNormal)
+    {
+        float maxSpeed = Mathf.Max(0f, maxWallBounceSpeed);
+        float normalSpeed = Mathf.Max(Vector2.Dot(velocity, wallNormal), wallDetachSpeed);
+        if (maxSpeed > 0f)
+            normalSpeed = Mathf.Min(normalSpeed, maxSpeed);
+
+        Vector2 normalVelocity = wallNormal * normalSpeed;
+        Vector2 tangentVelocity = velocity - (wallNormal * Vector2.Dot(velocity, wallNormal));
+
+        if (maxSpeed <= 0f)
+            return normalVelocity;
+
+        float tangentSpeedLimit = Mathf.Sqrt(Mathf.Max(0f, (maxSpeed * maxSpeed) - normalVelocity.sqrMagnitude));
+        tangentVelocity = Vector2.ClampMagnitude(tangentVelocity, tangentSpeedLimit);
+        return normalVelocity + tangentVelocity;
+    }
+
+    private bool IsWallContactNormal(Vector2 normal)
+    {
+        return Mathf.Abs(normal.x) >= minWallNormalAbsX && Mathf.Abs(normal.y) <= maxWallNormalY;
     }
 
     private bool CheckGrounded()
@@ -414,10 +707,18 @@ public class ChallengePlayerController : MonoBehaviour
         RaycastHit2D leftHit = Physics2D.Raycast(leftFoot, Vector2.down, groundedCheckDistance, groundLayer);
         RaycastHit2D rightHit = Physics2D.Raycast(rightFoot, Vector2.down, groundedCheckDistance, groundLayer);
 
-        Debug.DrawRay(leftFoot, Vector2.down * groundedCheckDistance, Color.cyan);
-        Debug.DrawRay(rightFoot, Vector2.down * groundedCheckDistance, Color.cyan);
+        if (showStableDebug)
+        {
+            Debug.DrawRay(leftFoot, Vector2.down * groundedCheckDistance, Color.cyan);
+            Debug.DrawRay(rightFoot, Vector2.down * groundedCheckDistance, Color.cyan);
+        }
 
         return leftHit.collider != null || rightHit.collider != null;
+    }
+
+    private bool IsInGroundLayer(int layer)
+    {
+        return (groundLayer.value & (1 << layer)) != 0;
     }
 
     private Vector2 GetCurrentDragVector()
@@ -521,6 +822,30 @@ public class ChallengePlayerController : MonoBehaviour
             playerAnimator = GetComponent<PlayerAnimator2D>();
     }
 
+    private void ApplyRuntimeNoFrictionMaterial()
+    {
+        if (!Application.isPlaying || !useRuntimeNoFrictionMaterial || col == null)
+            return;
+
+        runtimeNoFrictionMaterial = new PhysicsMaterial2D("Runtime Player No Friction")
+        {
+            friction = 0f,
+            bounciness = 0f
+        };
+        col.sharedMaterial = runtimeNoFrictionMaterial;
+    }
+
+    private void DestroyRuntimeNoFrictionMaterial()
+    {
+        if (runtimeNoFrictionMaterial == null)
+            return;
+
+        if (Application.isPlaying)
+            Destroy(runtimeNoFrictionMaterial);
+        else
+            DestroyImmediate(runtimeNoFrictionMaterial);
+    }
+
     private void EnsurePreviewLine()
     {
         if (chargePreviewLine == null)
@@ -567,7 +892,10 @@ public class ChallengePlayerController : MonoBehaviour
     private void UpgradeLegacyValuesIfNeeded()
     {
         if (!NeedsLatestTuningUpgrade())
+        {
+            UpgradeWallBounceValuesIfNeeded();
             return;
+        }
 
         stableHorizontalSpeedThreshold = 1.10f;
         stableVerticalSpeedThreshold = 0.45f;
@@ -581,6 +909,52 @@ public class ChallengePlayerController : MonoBehaviour
         dragDeadzone = 0.09f;
         airControlMultiplier = 0.02f;
         groundedCheckDistance = 0.14f;
+        UpgradeWallBounceValuesIfNeeded();
+    }
+
+    private void UpgradeWallBounceValuesIfNeeded()
+    {
+        bool hasFirstWallBounceDefaults =
+            Approximately(minWallBounceSpeed, 1.8f) &&
+            Approximately(wallBounceMultiplier, 0.45f) &&
+            Approximately(wallBounceUpwardBoost, 0.35f) &&
+            Approximately(maxWallBounceSpeed, 4.5f) &&
+            Approximately(minWallNormalAbsX, 0.65f) &&
+            Approximately(maxWallNormalY, 0.35f) &&
+            Approximately(wallBounceCooldown, 0.12f);
+
+        bool hasStrongWallBounceDefaults =
+            Approximately(minWallBounceSpeed, 0.75f) &&
+            Approximately(wallBounceMultiplier, 0.75f) &&
+            Approximately(wallBounceUpwardBoost, 0.55f) &&
+            Approximately(maxWallBounceSpeed, 6.5f) &&
+            Approximately(minWallNormalAbsX, 0.60f) &&
+            Approximately(maxWallNormalY, 0.40f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 1.60f);
+
+        bool hasUninitializedWallBounceDefaults =
+            Approximately(minWallBounceSpeed, 0f) &&
+            Approximately(wallBounceMultiplier, 0f) &&
+            Approximately(wallBounceUpwardBoost, 0f) &&
+            Approximately(maxWallBounceSpeed, 0f) &&
+            Approximately(minWallNormalAbsX, 0f) &&
+            Approximately(maxWallNormalY, 0f) &&
+            Approximately(wallBounceCooldown, 0f);
+
+        if (!hasFirstWallBounceDefaults && !hasStrongWallBounceDefaults && !hasUninitializedWallBounceDefaults)
+            return;
+
+        minWallBounceSpeed = 0.75f;
+        wallBounceMultiplier = 0.55f;
+        wallBounceUpwardBoost = 0.30f;
+        maxWallBounceSpeed = 4.8f;
+        minWallNormalAbsX = 0.60f;
+        maxWallNormalY = 0.40f;
+        wallBounceCooldown = 0.10f;
+        wallDetachSpeed = 1.15f;
+        wallStableLockoutTime = 0.18f;
+        useRuntimeNoFrictionMaterial = true;
     }
 
     private bool NeedsLatestTuningUpgrade()

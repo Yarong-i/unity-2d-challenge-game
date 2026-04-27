@@ -1769,17 +1769,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a9cde595b7ab10478dd6c3701e9f6de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stableSpeedThreshold: 0.35
-  groundedCheckDistance: 0.12
+  stableHorizontalSpeedThreshold: 1.1
+  stableVerticalSpeedThreshold: 0.45
+  stableSettleTime: 0.22
+  stableContactSettleTime: 0.12
+  stableContactGraceTime: 0.12
+  edgeStableHorizontalSpeedThreshold: 1.2
+  edgeStableVerticalSpeedThreshold: 0.55
+  minStableContactNormalY: 0.25
+  allowEdgeContactStable: 1
+  showStableDebug: 1
+  groundedCheckDistance: 0.14
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
   footInset: 0.05
-  maxChargeTime: 0.45
-  minLaunchForce: 4.5
-  maxLaunchForce: 13
-  maxDragDistance: 3.25
-  airControlMultiplier: 0.08
+  enableWallBounce: 1
+  minWallBounceSpeed: 0.75
+  wallBounceMultiplier: 0.55
+  wallBounceUpwardBoost: 0.3
+  maxWallBounceSpeed: 4.8
+  minWallNormalAbsX: 0.6
+  maxWallNormalY: 0.4
+  wallBounceCooldown: 0.1
+  wallDetachSpeed: 1.15
+  wallStableLockoutTime: 0.18
+  useRuntimeNoFrictionMaterial: 1
+  groundDeceleration: 70
+  stopSnapSpeed: 0.32
+  maxChargeTime: 2.1
+  minLaunchForce: 1.2
+  maxLaunchForce: 9.2
+  maxDragDistance: 1.2
+  dragDeadzone: 0.09
+  airControlMultiplier: 0.02
+  chargePreviewLine: {fileID: 0}
+  previewStartWidth: 0.16
+  previewEndWidth: 0.08
+  previewLowChargeColor: {r: 0.35, g: 0.95, b: 1, a: 0.8}
+  previewHighChargeColor: {r: 1, g: 0.55, b: 0.2, a: 1}
+  previewDeadzoneColor: {r: 1, g: 1, b: 1, a: 0.35}
   playerAnimator: {fileID: 1532753830}
 --- !u!1 &1664468939
 GameObject:
@@ -2015,6 +2044,7 @@ GameObject:
   - component: {fileID: 2041778190}
   - component: {fileID: 2041778189}
   - component: {fileID: 2041778188}
+  - component: {fileID: 2041778192}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2140,6 +2170,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2041778192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2041778187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fb1280b8eddc3d438aa540e5d5b1d59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  fallbackTargetName: player
+  offset: {x: 0, y: 0}
+  smoothing: 0.16
+  viewportPadding: 0.18
+  keepTargetOnScreen: 1
 --- !u!1 &2062484657
 GameObject:
   m_ObjectHideFlags: 0
