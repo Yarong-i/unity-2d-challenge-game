@@ -18,3 +18,15 @@
 - EN: The default camera composition uses `targetViewportPosition = (0.5, 0.38)` so the player sits slightly below center.
 - KR: 프레임 찢어짐처럼 보이는 문제는 오늘 범위에서 제외하고, 추후 VSync, Game View, 그래픽 설정 쪽에서 별도로 확인한다.
 - EN: The possible frame tearing issue is left for a later pass through VSync, Game View, and graphics settings.
+
+## 2026-05-08 - Minimal Checkpoint Respawn Loop / 최소 체크포인트 리스폰 루프
+- KR: 도전형 등반 게임용 최소 체크포인트/리스폰 루프를 추가했다.
+- EN: Added a minimal checkpoint and respawn loop for the solo challenge climbing game.
+- KR: 플레이어가 `fallYThreshold` 아래로 떨어지면 현재 리스폰 위치로 돌아가며, `R` 키로 수동 리스폰할 수 있다.
+- EN: The player respawns at the current respawn point after falling below `fallYThreshold`, and can manually respawn with the `R` key.
+- KR: 리스폰 시 `Rigidbody2D`의 선속도와 각속도를 초기화해 재시작 감각을 안정화했다.
+- EN: Respawn now clears the `Rigidbody2D` linear and angular velocity for a stable restart feel.
+- KR: `Checkpoint_Test`는 현재 씬의 `player`, `Goal`, 바닥 Collider2D 위치를 기준으로 초반 진행 경로의 안정적인 플랫폼 근처에 자동 배치했다.
+- EN: `Checkpoint_Test` was placed automatically near an early stable platform based on the current scene's `player`, `Goal`, and ground Collider2D positions.
+- KR: 이번 작업에서는 발사 이동, 벽 반발, 카메라 추적 설정을 변경하지 않았다.
+- EN: Launch movement, wall bounce, and camera follow settings were not changed in this pass.

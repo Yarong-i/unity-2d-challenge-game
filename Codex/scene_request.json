@@ -4,58 +4,13 @@
   "allowProtectedSampleScene": false,
   "objectsToCreate": [
     {
-      "name": "player",
+      "name": "RespawnManager",
       "parentPath": "",
-      "replaceIfExists": true,
-      "position": {
-        "x": -10.56,
-        "y": 1.77,
-        "z": 0.0
-      },
-      "rotationEuler": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "scale": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0
-      },
-      "layerName": "Player",
-      "tag": "Untagged",
-      "components": [
-        {
-          "type": "Rigidbody2D",
-          "rigidbody2D": {
-            "setBodyType": true,
-            "bodyType": "Dynamic",
-            "setGravityScale": true,
-            "gravityScale": 1.0,
-            "setConstraints": true,
-            "constraints": "FreezeRotation"
-          }
-        },
-        {
-          "type": "PlayerMoverRB",
-          "setEnabled": true,
-          "enabled": false
-        },
-        {
-          "type": "ChallengePlayerController",
-          "setEnabled": true,
-          "enabled": true
-        }
-      ]
-    },
-    {
-      "name": "Main Camera",
-      "parentPath": "",
-      "replaceIfExists": true,
+      "replaceIfExists": false,
       "position": {
         "x": 0.0,
         "y": 0.0,
-        "z": -10.0
+        "z": 0.0
       },
       "rotationEuler": {
         "x": 0.0,
@@ -68,10 +23,58 @@
         "z": 1.0
       },
       "layerName": "Default",
-      "tag": "MainCamera",
+      "tag": "Untagged",
       "components": [
         {
-          "type": "CameraFollow2D",
+          "type": "RespawnManager2D",
+          "setEnabled": true,
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "name": "Checkpoint_Test",
+      "parentPath": "",
+      "replaceIfExists": false,
+      "position": {
+        "x": -5.66,
+        "y": -0.68,
+        "z": 0.0
+      },
+      "rotationEuler": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "layerName": "Default",
+      "tag": "Untagged",
+      "components": [
+        {
+          "type": "BoxCollider2D",
+          "setEnabled": true,
+          "enabled": true,
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": true,
+            "setSize": true,
+            "size": {
+              "x": 1.5,
+              "y": 1.0
+            },
+            "setOffset": true,
+            "offset": {
+              "x": 0.0,
+              "y": 0.0
+            }
+          }
+        },
+        {
+          "type": "Checkpoint2D",
           "setEnabled": true,
           "enabled": true
         }
