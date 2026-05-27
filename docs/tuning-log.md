@@ -40,3 +40,21 @@
 - EN: Removed unused enemy, hazard, old respawn point, patrol points, and old `Goal` objects.
 - KR: 타이머 UI, Esc 일시정지, 발사형 이동, 카메라 추적, 체크포인트/리스폰 기능은 유지했다.
 - EN: Preserved timer UI, Esc pause, launch movement, camera follow, and checkpoint/respawn behavior.
+
+## 2026-05-27 - Runtime Main Menu And Pause Settings / 런타임 메인 메뉴와 일시정지 설정
+- KR: `Assets/asd.unity` 안에서 동작하는 런타임 메인 메뉴 오버레이를 추가했다.
+- EN: Added a runtime main menu overlay that works inside `Assets/asd.unity`.
+- KR: Start, Settings, Quit 기본 메뉴 흐름과 Settings placeholder를 추가했다.
+- EN: Added the basic Start, Settings, and Quit menu flow with a Settings placeholder.
+- KR: Start 버튼을 누르기 전에는 게임이 시작되지 않고 타이머가 `Time 00:00.00`에서 대기하도록 고쳤다.
+- EN: Fixed the pre-start state so the game does not begin and the timer waits at `Time 00:00.00` until Start is pressed.
+- KR: `RunTimerUI`에 명시적인 `ResetTimer()`, `StartTimer()`, `StopTimer()` 흐름을 추가했다.
+- EN: Added explicit `ResetTimer()`, `StartTimer()`, and `StopTimer()` flow to `RunTimerUI`.
+- KR: Esc 일시정지 메뉴에 Settings 버튼과 Settings placeholder를 추가했다.
+- EN: Added a Settings button and Settings placeholder to the Esc pause menu.
+- KR: 메인 메뉴와 일시정지 메뉴가 동시에 겹치지 않도록 시작 전 Esc pause를 막고 패널 상태를 분리했다.
+- EN: Prevented the main menu and pause menu from overlapping by blocking Esc pause before Start and separating panel state.
+- KR: Pause 중 Settings를 열어도 `Time.timeScale = 0` 상태가 유지되도록 했다.
+- EN: Kept `Time.timeScale = 0` while Settings is open from the pause menu.
+- KR: 기존 발사 이동, 벽 반발, 카메라 추적, 체크포인트/리스폰 스크립트는 건드리지 않았다.
+- EN: Left the existing launch movement, wall bounce, camera follow, checkpoint, and respawn scripts untouched.

@@ -3,77 +3,85 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class PauseMenuController : MonoBehaviour
+public class MainMenuController : MonoBehaviour
 {
-    [SerializeField] private GameObject pausePanel;
+    [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject settingsPanel;
-    [SerializeField] private Button resumeButton;
+    [SerializeField] private Button startButton;
     [SerializeField] private Button settingsButton;
     [SerializeField] private Button quitButton;
     [SerializeField] private Button backButton;
 
-    private bool isPaused;
-    private bool showingSettings;
+    public static bool HasGameStarted { get; private set; }
+    public static bool IsShowingMenu { get; private set; }
+    public static bool BlocksPauseInput => IsShowingMenu && !HasGameStarted;
 
     private void Awake()
     {
-        EnsurePausePanel();
-        SetPaused(false);
+        HasGameStarted = false;
+        IsShowingMenu = true;
+        EnsureMenuUI();
+    }
+
+    private void Start()
+    {
+        ShowMainMenu();
+        Time.timeScale = 0f;
     }
 
     private void OnEnable()
     {
-        if (resumeButton != null)
-            resumeButton.onClick.AddListener(Resume);
-
-        if (settingsButton != null)
-            settingsButton.onClick.AddListener(ShowSettings);
-
-        if (quitButton != null)
-            quitButton.onClick.AddListener(QuitGame);
-
-        if (backButton != null)
-            backButton.onClick.AddListener(ShowPausePanel);
+        AddButtonListeners();
     }
 
     private void OnDisable()
     {
-        if (resumeButton != null)
-            resumeButton.onClick.RemoveListener(Resume);
+        RemoveButtonListeners();
 
-        if (settingsButton != null)
-            settingsButton.onClick.RemoveListener(ShowSettings);
-
-        if (quitButton != null)
-            quitButton.onClick.RemoveListener(QuitGame);
-
-        if (backButton != null)
-            backButton.onClick.RemoveListener(ShowPausePanel);
-
-        if (isPaused)
+        if (IsShowingMenu && !HasGameStarted)
             Time.timeScale = 1f;
     }
 
-    private void Update()
+    public void StartGame()
     {
-        if (MainMenuController.BlocksPauseInput)
-            return;
-
-        if (!Input.GetKeyDown(KeyCode.Escape))
-            return;
-
-        if (showingSettings)
+        RunTimerUI timer = FindFirstObjectByType<RunTimerUI>();
+        if (timer != null)
         {
-            ShowPausePanel();
-            return;
+            timer.ResetTimer();
+            timer.StartTimer();
         }
 
-        SetPaused(!isPaused);
+        Time.timeScale = 1f;
+        HasGameStarted = true;
+        IsShowingMenu = false;
+
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
     }
 
-    public void Resume()
+    public void ShowSettings()
     {
-        SetPaused(false);
+        IsShowingMenu = true;
+
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(false);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(true);
+    }
+
+    public void ShowMainMenu()
+    {
+        IsShowingMenu = true;
+
+        if (mainMenuPanel != null)
+            mainMenuPanel.SetActive(true);
+
+        if (settingsPanel != null)
+            settingsPanel.SetActive(false);
     }
 
     public void QuitGame()
@@ -87,56 +95,13 @@ public class PauseMenuController : MonoBehaviour
 #endif
     }
 
-    private void SetPaused(bool paused)
+    private void EnsureMenuUI()
     {
-        isPaused = paused;
-        showingSettings = false;
-        Time.timeScale = paused ? 0f : 1f;
-
-        if (pausePanel != null)
-            pausePanel.SetActive(paused);
-
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
-    }
-
-    private void ShowSettings()
-    {
-        if (!isPaused)
-            return;
-
-        showingSettings = true;
-        Time.timeScale = 0f;
-
-        if (pausePanel != null)
-            pausePanel.SetActive(false);
-
-        if (settingsPanel != null)
-            settingsPanel.SetActive(true);
-    }
-
-    private void ShowPausePanel()
-    {
-        if (!isPaused)
-            return;
-
-        showingSettings = false;
-        Time.timeScale = 0f;
-
-        if (pausePanel != null)
-            pausePanel.SetActive(true);
-
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
-    }
-
-    private void EnsurePausePanel()
-    {
-        if (pausePanel == null)
-            pausePanel = GameObject.Find("PausePanel");
+        if (mainMenuPanel == null)
+            mainMenuPanel = GameObject.Find("MainMenuPanel");
 
         if (settingsPanel == null)
-            settingsPanel = GameObject.Find("PauseSettingsPanel");
+            settingsPanel = GameObject.Find("SettingsPanel");
 
         Canvas canvas = FindFirstObjectByType<Canvas>();
         if (canvas == null)
@@ -144,37 +109,37 @@ public class PauseMenuController : MonoBehaviour
 
         EnsureEventSystem();
 
-        if (pausePanel == null)
+        if (mainMenuPanel == null)
         {
-            pausePanel = CreateFullScreenPanel(canvas.transform, "PausePanel", new Color(0f, 0f, 0f, 0.65f));
-            CreateLabel(pausePanel.transform, "PausedText", "PAUSED", 48f, new Vector2(0f, 140f), new Vector2(360f, 80f));
-            resumeButton = CreateButton(pausePanel.transform, "ResumeButton", "Resume", new Vector2(0f, 42f));
-            settingsButton = CreateButton(pausePanel.transform, "SettingsButton", "Settings", new Vector2(0f, -38f));
-            quitButton = CreateButton(pausePanel.transform, "QuitButton", "Quit", new Vector2(0f, -118f));
+            mainMenuPanel = CreateFullScreenPanel(canvas.transform, "MainMenuPanel", new Color(0.04f, 0.05f, 0.06f, 0.88f));
+            CreateLabel(mainMenuPanel.transform, "TitleText", "CLIMB CHALLENGE", 52f, new Vector2(0f, 150f), new Vector2(620f, 84f));
+            startButton = CreateButton(mainMenuPanel.transform, "StartButton", "Start", new Vector2(0f, 42f));
+            settingsButton = CreateButton(mainMenuPanel.transform, "SettingsButton", "Settings", new Vector2(0f, -38f));
+            quitButton = CreateButton(mainMenuPanel.transform, "QuitButton", "Quit", new Vector2(0f, -118f));
         }
 
         if (settingsPanel == null)
         {
-            settingsPanel = CreateFullScreenPanel(canvas.transform, "PauseSettingsPanel", new Color(0f, 0f, 0f, 0.65f));
+            settingsPanel = CreateFullScreenPanel(canvas.transform, "SettingsPanel", new Color(0.04f, 0.05f, 0.06f, 0.88f));
             CreateLabel(settingsPanel.transform, "SettingsTitleText", "SETTINGS", 46f, new Vector2(0f, 140f), new Vector2(420f, 76f));
             CreateLabel(settingsPanel.transform, "SettingsPlaceholderText", "Settings options will be added later.", 26f, new Vector2(0f, 42f), new Vector2(620f, 56f));
             backButton = CreateButton(settingsPanel.transform, "BackButton", "Back", new Vector2(0f, -88f));
         }
 
-        CachePauseButtons();
+        CacheMainMenuButtons();
         CacheSettingsButtons();
     }
 
-    private void CachePauseButtons()
+    private void CacheMainMenuButtons()
     {
-        if (resumeButton == null)
-            resumeButton = FindButton(pausePanel.transform, "ResumeButton");
+        if (startButton == null)
+            startButton = FindButton(mainMenuPanel.transform, "StartButton");
 
         if (settingsButton == null)
-            settingsButton = FindButton(pausePanel.transform, "SettingsButton");
+            settingsButton = FindButton(mainMenuPanel.transform, "SettingsButton");
 
         if (quitButton == null)
-            quitButton = FindButton(pausePanel.transform, "QuitButton");
+            quitButton = FindButton(mainMenuPanel.transform, "QuitButton");
     }
 
     private void CacheSettingsButtons()
@@ -238,22 +203,22 @@ public class PauseMenuController : MonoBehaviour
 
     private void CreateLabel(Transform parent, string objectName, string text, float fontSize, Vector2 anchoredPosition, Vector2 size)
     {
-        GameObject titleObject = new GameObject(objectName, typeof(RectTransform));
-        titleObject.transform.SetParent(parent, false);
+        GameObject labelObject = new GameObject(objectName, typeof(RectTransform));
+        labelObject.transform.SetParent(parent, false);
 
-        var titleRect = titleObject.GetComponent<RectTransform>();
-        titleRect.anchorMin = new Vector2(0.5f, 0.5f);
-        titleRect.anchorMax = new Vector2(0.5f, 0.5f);
-        titleRect.pivot = new Vector2(0.5f, 0.5f);
-        titleRect.anchoredPosition = anchoredPosition;
-        titleRect.sizeDelta = size;
+        var labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0.5f, 0.5f);
+        labelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        labelRect.pivot = new Vector2(0.5f, 0.5f);
+        labelRect.anchoredPosition = anchoredPosition;
+        labelRect.sizeDelta = size;
 
-        var titleText = titleObject.AddComponent<TextMeshProUGUI>();
-        titleText.text = text;
-        titleText.fontSize = fontSize;
-        titleText.color = Color.white;
-        titleText.alignment = TextAlignmentOptions.Center;
-        titleText.raycastTarget = false;
+        var label = labelObject.AddComponent<TextMeshProUGUI>();
+        label.text = text;
+        label.fontSize = fontSize;
+        label.color = Color.white;
+        label.alignment = TextAlignmentOptions.Center;
+        label.raycastTarget = false;
     }
 
     private Button CreateButton(Transform parent, string objectName, string buttonText, Vector2 anchoredPosition)
@@ -266,10 +231,10 @@ public class PauseMenuController : MonoBehaviour
         buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
         buttonRect.pivot = new Vector2(0.5f, 0.5f);
         buttonRect.anchoredPosition = anchoredPosition;
-        buttonRect.sizeDelta = new Vector2(220f, 54f);
+        buttonRect.sizeDelta = new Vector2(260f, 58f);
 
         var buttonImage = buttonObject.GetComponent<Image>();
-        buttonImage.color = new Color(1f, 1f, 1f, 0.92f);
+        buttonImage.color = new Color(1f, 1f, 1f, 0.94f);
 
         GameObject labelObject = new GameObject("Text", typeof(RectTransform));
         labelObject.transform.SetParent(buttonObject.transform, false);
@@ -288,5 +253,35 @@ public class PauseMenuController : MonoBehaviour
         label.raycastTarget = false;
 
         return buttonObject.GetComponent<Button>();
+    }
+
+    private void AddButtonListeners()
+    {
+        if (startButton != null)
+            startButton.onClick.AddListener(StartGame);
+
+        if (settingsButton != null)
+            settingsButton.onClick.AddListener(ShowSettings);
+
+        if (quitButton != null)
+            quitButton.onClick.AddListener(QuitGame);
+
+        if (backButton != null)
+            backButton.onClick.AddListener(ShowMainMenu);
+    }
+
+    private void RemoveButtonListeners()
+    {
+        if (startButton != null)
+            startButton.onClick.RemoveListener(StartGame);
+
+        if (settingsButton != null)
+            settingsButton.onClick.RemoveListener(ShowSettings);
+
+        if (quitButton != null)
+            quitButton.onClick.RemoveListener(QuitGame);
+
+        if (backButton != null)
+            backButton.onClick.RemoveListener(ShowMainMenu);
     }
 }

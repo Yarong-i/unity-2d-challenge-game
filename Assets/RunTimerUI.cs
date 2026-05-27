@@ -8,15 +8,21 @@ public class RunTimerUI : MonoBehaviour
     [SerializeField] private string label = "Time";
 
     private float elapsedTime;
+    private bool timerRunning;
 
     private void Awake()
     {
+        timerRunning = false;
+        elapsedTime = 0f;
         EnsureTimerText();
         UpdateTimerText();
     }
 
     private void Update()
     {
+        if (!timerRunning)
+            return;
+
         elapsedTime += Time.deltaTime;
         UpdateTimerText();
     }
@@ -24,6 +30,18 @@ public class RunTimerUI : MonoBehaviour
     public void ResetTimer()
     {
         elapsedTime = 0f;
+        UpdateTimerText();
+    }
+
+    public void StartTimer()
+    {
+        timerRunning = true;
+        UpdateTimerText();
+    }
+
+    public void StopTimer()
+    {
+        timerRunning = false;
         UpdateTimerText();
     }
 
