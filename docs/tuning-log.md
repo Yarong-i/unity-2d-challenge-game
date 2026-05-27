@@ -58,3 +58,17 @@
 - EN: Kept `Time.timeScale = 0` while Settings is open from the pause menu.
 - KR: 기존 발사 이동, 벽 반발, 카메라 추적, 체크포인트/리스폰 스크립트는 건드리지 않았다.
 - EN: Left the existing launch movement, wall bounce, camera follow, checkpoint, and respawn scripts untouched.
+
+## 2026-05-27 - Fullscreen Settings UX / 전체화면 설정 UX
+- KR: Settings 메뉴의 Fullscreen 토글 UX를 개선해 현재 상태를 더 명확하게 보이도록 했다.
+- EN: Improved the Fullscreen toggle UX in Settings so the current state is easier to see.
+- KR: `Screen.fullScreen`과 `Screen.fullScreenMode`를 함께 사용해 전체화면 상태를 반영한다.
+- EN: Uses both `Screen.fullScreen` and `Screen.fullScreenMode` to apply fullscreen state.
+- KR: Unity 에디터에서는 Game View가 실제 전체화면처럼 바뀌지 않을 수 있어 `Fullscreen: On/Off` 상태 라벨과 짧은 안내 문구를 추가했다.
+- EN: Added a `Fullscreen: On/Off` state label and a short note because the Unity Editor Game View may not visibly resize.
+- KR: Main Menu Settings와 Pause Settings가 같은 fullscreen 상태를 공유하도록 했다.
+- EN: Main Menu Settings and Pause Settings now share the same fullscreen state.
+- KR: Volume 슬라이더와 기존 Start/Settings/Quit, Esc pause 흐름은 유지했다.
+- EN: Preserved the Volume slider and existing Start/Settings/Quit and Esc pause flows.
+- KR: 기존 발사 이동, 벽 반발, 카메라 추적, 체크포인트/리스폰, 타이머는 건드리지 않았다.
+- EN: Left launch movement, wall bounce, camera follow, checkpoint/respawn, and timer behavior untouched.

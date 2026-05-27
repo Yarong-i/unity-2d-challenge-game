@@ -11,6 +11,9 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private Button settingsButton;
     [SerializeField] private Button quitButton;
     [SerializeField] private Button backButton;
+    [SerializeField] private Toggle fullscreenToggle;
+    [SerializeField] private Slider volumeSlider;
+    [SerializeField] private TMP_Text fullscreenLabel;
 
     public static bool HasGameStarted { get; private set; }
     public static bool IsShowingMenu { get; private set; }
@@ -20,6 +23,7 @@ public class MainMenuController : MonoBehaviour
     {
         HasGameStarted = false;
         IsShowingMenu = true;
+        GameSettingsController.Initialize();
         EnsureMenuUI();
     }
 
@@ -71,6 +75,8 @@ public class MainMenuController : MonoBehaviour
 
         if (settingsPanel != null)
             settingsPanel.SetActive(true);
+
+        GameSettingsController.SyncControls(fullscreenToggle, volumeSlider, fullscreenLabel);
     }
 
     public void ShowMainMenu()
@@ -122,12 +128,15 @@ public class MainMenuController : MonoBehaviour
         {
             settingsPanel = CreateFullScreenPanel(canvas.transform, "SettingsPanel", new Color(0.04f, 0.05f, 0.06f, 0.88f));
             CreateLabel(settingsPanel.transform, "SettingsTitleText", "SETTINGS", 46f, new Vector2(0f, 140f), new Vector2(420f, 76f));
-            CreateLabel(settingsPanel.transform, "SettingsPlaceholderText", "Settings options will be added later.", 26f, new Vector2(0f, 42f), new Vector2(620f, 56f));
-            backButton = CreateButton(settingsPanel.transform, "BackButton", "Back", new Vector2(0f, -88f));
+            fullscreenToggle = CreateToggle(settingsPanel.transform, "FullscreenToggle", "Fullscreen", new Vector2(0f, 48f));
+            volumeSlider = CreateSlider(settingsPanel.transform, "VolumeSlider", "Volume", new Vector2(0f, -28f));
+            CreateLabel(settingsPanel.transform, "FullscreenHintText", GameSettingsController.FullscreenHintText, 18f, new Vector2(0f, -78f), new Vector2(520f, 36f));
+            backButton = CreateButton(settingsPanel.transform, "BackButton", "Back", new Vector2(0f, -138f));
         }
 
         CacheMainMenuButtons();
         CacheSettingsButtons();
+        GameSettingsController.SyncControls(fullscreenToggle, volumeSlider, fullscreenLabel);
     }
 
     private void CacheMainMenuButtons()
@@ -149,12 +158,39 @@ public class MainMenuController : MonoBehaviour
 
         if (backButton == null)
             backButton = FindButton(settingsPanel.transform, "BackButton");
+
+        if (fullscreenToggle == null)
+            fullscreenToggle = FindToggle(settingsPanel.transform, "FullscreenToggle");
+
+        if (fullscreenLabel == null)
+            fullscreenLabel = FindText(settingsPanel.transform, "FullscreenToggle/Label");
+
+        if (volumeSlider == null)
+            volumeSlider = FindSlider(settingsPanel.transform, "VolumeSlider");
     }
 
     private Button FindButton(Transform parent, string buttonName)
     {
         Transform buttonTransform = parent.Find(buttonName);
         return buttonTransform == null ? null : buttonTransform.GetComponent<Button>();
+    }
+
+    private Toggle FindToggle(Transform parent, string toggleName)
+    {
+        Transform toggleTransform = parent.Find(toggleName);
+        return toggleTransform == null ? null : toggleTransform.GetComponent<Toggle>();
+    }
+
+    private Slider FindSlider(Transform parent, string sliderName)
+    {
+        Transform sliderTransform = parent.Find(sliderName);
+        return sliderTransform == null ? null : sliderTransform.GetComponent<Slider>();
+    }
+
+    private TMP_Text FindText(Transform parent, string textPath)
+    {
+        Transform textTransform = parent.Find(textPath);
+        return textTransform == null ? null : textTransform.GetComponent<TMP_Text>();
     }
 
     private Canvas CreateRuntimeCanvas()
@@ -255,6 +291,159 @@ public class MainMenuController : MonoBehaviour
         return buttonObject.GetComponent<Button>();
     }
 
+    private Toggle CreateToggle(Transform parent, string objectName, string labelText, Vector2 anchoredPosition)
+    {
+        GameObject toggleObject = new GameObject(objectName, typeof(RectTransform), typeof(Toggle));
+        toggleObject.transform.SetParent(parent, false);
+
+        var toggleRect = toggleObject.GetComponent<RectTransform>();
+        toggleRect.anchorMin = new Vector2(0.5f, 0.5f);
+        toggleRect.anchorMax = new Vector2(0.5f, 0.5f);
+        toggleRect.pivot = new Vector2(0.5f, 0.5f);
+        toggleRect.anchoredPosition = anchoredPosition;
+        toggleRect.sizeDelta = new Vector2(360f, 48f);
+
+        GameObject boxObject = new GameObject("CheckmarkBox", typeof(RectTransform), typeof(Image));
+        boxObject.transform.SetParent(toggleObject.transform, false);
+
+        var boxRect = boxObject.GetComponent<RectTransform>();
+        boxRect.anchorMin = new Vector2(0f, 0.5f);
+        boxRect.anchorMax = new Vector2(0f, 0.5f);
+        boxRect.pivot = new Vector2(0f, 0.5f);
+        boxRect.anchoredPosition = Vector2.zero;
+        boxRect.sizeDelta = new Vector2(36f, 36f);
+
+        var boxImage = boxObject.GetComponent<Image>();
+        boxImage.color = new Color(1f, 1f, 1f, 0.94f);
+
+        GameObject checkObject = new GameObject("Checkmark", typeof(RectTransform), typeof(Image));
+        checkObject.transform.SetParent(boxObject.transform, false);
+
+        var checkRect = checkObject.GetComponent<RectTransform>();
+        checkRect.anchorMin = new Vector2(0.5f, 0.5f);
+        checkRect.anchorMax = new Vector2(0.5f, 0.5f);
+        checkRect.pivot = new Vector2(0.5f, 0.5f);
+        checkRect.anchoredPosition = Vector2.zero;
+        checkRect.sizeDelta = new Vector2(22f, 22f);
+
+        var checkImage = checkObject.GetComponent<Image>();
+        checkImage.color = new Color(0.15f, 0.35f, 0.95f, 1f);
+
+        fullscreenLabel = CreateSettingLabel(toggleObject.transform, "Label", GameSettingsController.FullscreenLabelText, new Vector2(62f, 0f), new Vector2(280f, 44f), TextAlignmentOptions.MidlineLeft);
+
+        var toggle = toggleObject.GetComponent<Toggle>();
+        toggle.targetGraphic = boxImage;
+        toggle.graphic = checkImage;
+        toggle.isOn = Screen.fullScreen;
+
+        return toggle;
+    }
+
+    private Slider CreateSlider(Transform parent, string objectName, string labelText, Vector2 anchoredPosition)
+    {
+        GameObject containerObject = new GameObject(objectName, typeof(RectTransform), typeof(Slider));
+        containerObject.transform.SetParent(parent, false);
+
+        var containerRect = containerObject.GetComponent<RectTransform>();
+        containerRect.anchorMin = new Vector2(0.5f, 0.5f);
+        containerRect.anchorMax = new Vector2(0.5f, 0.5f);
+        containerRect.pivot = new Vector2(0.5f, 0.5f);
+        containerRect.anchoredPosition = anchoredPosition;
+        containerRect.sizeDelta = new Vector2(420f, 56f);
+
+        CreateSettingLabel(containerObject.transform, "Label", labelText, new Vector2(0f, 0f), new Vector2(120f, 44f), TextAlignmentOptions.MidlineLeft);
+
+        GameObject backgroundObject = new GameObject("Background", typeof(RectTransform), typeof(Image));
+        backgroundObject.transform.SetParent(containerObject.transform, false);
+
+        var backgroundRect = backgroundObject.GetComponent<RectTransform>();
+        backgroundRect.anchorMin = new Vector2(0f, 0.5f);
+        backgroundRect.anchorMax = new Vector2(1f, 0.5f);
+        backgroundRect.pivot = new Vector2(0.5f, 0.5f);
+        backgroundRect.offsetMin = new Vector2(128f, -6f);
+        backgroundRect.offsetMax = new Vector2(0f, 6f);
+
+        var backgroundImage = backgroundObject.GetComponent<Image>();
+        backgroundImage.color = new Color(1f, 1f, 1f, 0.32f);
+
+        GameObject fillAreaObject = new GameObject("Fill Area", typeof(RectTransform));
+        fillAreaObject.transform.SetParent(containerObject.transform, false);
+
+        var fillAreaRect = fillAreaObject.GetComponent<RectTransform>();
+        fillAreaRect.anchorMin = backgroundRect.anchorMin;
+        fillAreaRect.anchorMax = backgroundRect.anchorMax;
+        fillAreaRect.offsetMin = backgroundRect.offsetMin;
+        fillAreaRect.offsetMax = backgroundRect.offsetMax;
+
+        GameObject fillObject = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+        fillObject.transform.SetParent(fillAreaObject.transform, false);
+
+        var fillRect = fillObject.GetComponent<RectTransform>();
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = Vector2.one;
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+
+        var fillImage = fillObject.GetComponent<Image>();
+        fillImage.color = new Color(0.15f, 0.55f, 0.95f, 1f);
+
+        GameObject handleAreaObject = new GameObject("Handle Slide Area", typeof(RectTransform));
+        handleAreaObject.transform.SetParent(containerObject.transform, false);
+
+        var handleAreaRect = handleAreaObject.GetComponent<RectTransform>();
+        handleAreaRect.anchorMin = backgroundRect.anchorMin;
+        handleAreaRect.anchorMax = backgroundRect.anchorMax;
+        handleAreaRect.offsetMin = backgroundRect.offsetMin;
+        handleAreaRect.offsetMax = backgroundRect.offsetMax;
+
+        GameObject handleObject = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+        handleObject.transform.SetParent(handleAreaObject.transform, false);
+
+        var handleRect = handleObject.GetComponent<RectTransform>();
+        handleRect.sizeDelta = new Vector2(24f, 24f);
+
+        var handleImage = handleObject.GetComponent<Image>();
+        handleImage.color = new Color(1f, 1f, 1f, 0.96f);
+
+        var slider = containerObject.GetComponent<Slider>();
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.value = GameSettingsController.Volume;
+        slider.fillRect = fillRect;
+        slider.handleRect = handleRect;
+        slider.targetGraphic = handleImage;
+
+        return slider;
+    }
+
+    private TMP_Text CreateSettingLabel(Transform parent, string objectName, string text, Vector2 anchoredPosition, Vector2 size, TextAlignmentOptions alignment)
+    {
+        GameObject labelObject = new GameObject(objectName, typeof(RectTransform));
+        labelObject.transform.SetParent(parent, false);
+
+        var labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.anchorMin = new Vector2(0f, 0.5f);
+        labelRect.anchorMax = new Vector2(0f, 0.5f);
+        labelRect.pivot = new Vector2(0f, 0.5f);
+        labelRect.anchoredPosition = anchoredPosition;
+        labelRect.sizeDelta = size;
+
+        var label = labelObject.AddComponent<TextMeshProUGUI>();
+        label.text = text;
+        label.fontSize = 26f;
+        label.color = Color.white;
+        label.alignment = alignment;
+        label.raycastTarget = false;
+
+        return label;
+    }
+
+    private void OnFullscreenChanged(bool fullscreen)
+    {
+        GameSettingsController.SetFullscreen(fullscreen);
+        GameSettingsController.SyncControls(fullscreenToggle, volumeSlider, fullscreenLabel);
+    }
+
     private void AddButtonListeners()
     {
         if (startButton != null)
@@ -268,6 +457,12 @@ public class MainMenuController : MonoBehaviour
 
         if (backButton != null)
             backButton.onClick.AddListener(ShowMainMenu);
+
+        if (fullscreenToggle != null)
+            fullscreenToggle.onValueChanged.AddListener(OnFullscreenChanged);
+
+        if (volumeSlider != null)
+            volumeSlider.onValueChanged.AddListener(GameSettingsController.SetVolume);
     }
 
     private void RemoveButtonListeners()
@@ -283,5 +478,11 @@ public class MainMenuController : MonoBehaviour
 
         if (backButton != null)
             backButton.onClick.RemoveListener(ShowMainMenu);
+
+        if (fullscreenToggle != null)
+            fullscreenToggle.onValueChanged.RemoveListener(OnFullscreenChanged);
+
+        if (volumeSlider != null)
+            volumeSlider.onValueChanged.RemoveListener(GameSettingsController.SetVolume);
     }
 }
