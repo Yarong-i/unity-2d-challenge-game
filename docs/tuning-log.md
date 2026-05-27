@@ -30,3 +30,13 @@
 - EN: `Checkpoint_Test` was placed automatically near an early stable platform based on the current scene's `player`, `Goal`, and ground Collider2D positions.
 - KR: 이번 작업에서는 발사 이동, 벽 반발, 카메라 추적 설정을 변경하지 않았다.
 - EN: Launch movement, wall bounce, and camera follow settings were not changed in this pass.
+
+## 2026-05-27 - Timer, Pause, And Scene Cleanup / 타이머, 일시정지, 씬 정리
+- KR: 연습용 씬 오브젝트를 정리해 현재 도전형 등반 프로토타입에 필요한 구성만 남겼다.
+- EN: Cleaned up practice scene objects so the current challenge-climbing prototype keeps only the needed setup.
+- KR: `player`, `Main Camera`, `GameSessionManager`, `RespawnManager`, `Checkpoint_Test`, 테스트용 플랫폼은 유지했다.
+- EN: Kept `player`, `Main Camera`, `GameSessionManager`, `RespawnManager`, `Checkpoint_Test`, and the test platforms.
+- KR: 불필요한 적, 위험물, 예전 리스폰 지점, 순찰 포인트, 예전 `Goal` 오브젝트는 제거했다.
+- EN: Removed unused enemy, hazard, old respawn point, patrol points, and old `Goal` objects.
+- KR: 타이머 UI, Esc 일시정지, 발사형 이동, 카메라 추적, 체크포인트/리스폰 기능은 유지했다.
+- EN: Preserved timer UI, Esc pause, launch movement, camera follow, and checkpoint/respawn behavior.

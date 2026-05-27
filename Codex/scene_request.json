@@ -2,43 +2,52 @@
   "scenePath": "Assets/asd.unity",
   "saveScene": true,
   "allowProtectedSampleScene": false,
-  "objectsToCreate": [
+  "objectsToDelete": [
     {
-      "name": "RespawnManager",
-      "parentPath": "",
-      "replaceIfExists": false,
-      "position": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "rotationEuler": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "scale": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0
-      },
-      "layerName": "Default",
-      "tag": "Untagged",
-      "components": [
-        {
-          "type": "RespawnManager2D",
-          "setEnabled": true,
-          "enabled": true
-        }
-      ]
+      "name": "Circle",
+      "failIfMissing": false
     },
     {
-      "name": "Checkpoint_Test",
+      "name": "LeftPoint",
+      "failIfMissing": false
+    },
+    {
+      "name": "RightPoint",
+      "failIfMissing": false
+    },
+    {
+      "name": "RespawnPoint",
+      "failIfMissing": false
+    },
+    {
+      "name": "Goal",
+      "failIfMissing": false
+    },
+    {
+      "name": "Triangle",
+      "failIfMissing": false
+    },
+    {
+      "name": "SpikeDamage",
+      "failIfMissing": false
+    },
+    {
+      "name": "Canvas",
+      "failIfMissing": false
+    },
+    {
+      "name": "EventSystem",
+      "failIfMissing": false
+    }
+  ],
+  "objectsToCreate": [
+    {
+      "name": "GameSessionManager",
       "parentPath": "",
-      "replaceIfExists": false,
+      "replaceIfExists": true,
       "position": {
-        "x": -5.66,
-        "y": -0.68,
+        "x": 0.0,
+        "y": 0.0,
         "z": 0.0
       },
       "rotationEuler": {
@@ -55,26 +64,12 @@
       "tag": "Untagged",
       "components": [
         {
-          "type": "BoxCollider2D",
+          "type": "RunTimerUI",
           "setEnabled": true,
-          "enabled": true,
-          "boxCollider2D": {
-            "setIsTrigger": true,
-            "isTrigger": true,
-            "setSize": true,
-            "size": {
-              "x": 1.5,
-              "y": 1.0
-            },
-            "setOffset": true,
-            "offset": {
-              "x": 0.0,
-              "y": 0.0
-            }
-          }
+          "enabled": true
         },
         {
-          "type": "Checkpoint2D",
+          "type": "PauseMenuController",
           "setEnabled": true,
           "enabled": true
         }

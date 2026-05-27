@@ -30,6 +30,7 @@ public static class CodexUnityBridge
             scenePath = PrimaryScenePath,
             saveScene = true,
             allowProtectedSampleScene = false,
+            objectsToDelete = Array.Empty<DeleteObjectRequest>(),
             objectsToCreate = Array.Empty<CreateObjectRequest>()
         };
 
@@ -75,6 +76,19 @@ public static class CodexUnityBridge
 
         Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
 
+        int deleted = 0;
+        if (request.objectsToDelete != null)
+        {
+            foreach (var deleteRequest in request.objectsToDelete)
+            {
+                if (deleteRequest == null || string.IsNullOrWhiteSpace(deleteRequest.name))
+                    continue;
+
+                if (DeleteObject(deleteRequest))
+                    deleted++;
+            }
+        }
+
         int createdOrUpdated = 0;
         if (request.objectsToCreate != null)
         {
@@ -94,7 +108,23 @@ public static class CodexUnityBridge
             EditorSceneManager.SaveScene(scene);
         }
 
-        Debug.Log($"Codex scene request applied to {scenePath}. Objects processed: {createdOrUpdated}");
+        Debug.Log($"Codex scene request applied to {scenePath}. Objects deleted: {deleted}. Objects created/updated: {createdOrUpdated}");
+    }
+
+    private static bool DeleteObject(DeleteObjectRequest request)
+    {
+        GameObject gameObject = GameObject.Find(request.name);
+        if (gameObject == null)
+        {
+            if (request.failIfMissing)
+                throw new InvalidOperationException($"GameObject not found for deletion: {request.name}");
+
+            Debug.LogWarning($"Codex scene request skipped missing GameObject deletion: {request.name}");
+            return false;
+        }
+
+        Undo.DestroyObjectImmediate(gameObject);
+        return true;
     }
 
     private static void CreateOrUpdateObject(CreateObjectRequest request)
@@ -501,7 +531,15 @@ public static class CodexUnityBridge
         public string scenePath = PrimaryScenePath;
         public bool saveScene = true;
         public bool allowProtectedSampleScene;
+        public DeleteObjectRequest[] objectsToDelete = Array.Empty<DeleteObjectRequest>();
         public CreateObjectRequest[] objectsToCreate = Array.Empty<CreateObjectRequest>();
+    }
+
+    [Serializable]
+    public sealed class DeleteObjectRequest
+    {
+        public string name;
+        public bool failIfMissing;
     }
 
     [Serializable]
