@@ -4,7 +4,15 @@
   "allowProtectedSampleScene": false,
   "objectsToDelete": [
     {
-      "name": "Checkpoint_Test",
+      "name": "Square",
+      "failIfMissing": false
+    },
+    {
+      "name": "Square (1)",
+      "failIfMissing": false
+    },
+    {
+      "name": "Square (2)",
       "failIfMissing": false
     }
   ],

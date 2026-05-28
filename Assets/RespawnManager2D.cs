@@ -36,6 +36,9 @@ public class RespawnManager2D : MonoBehaviour
         if (player == null)
             return;
 
+        if (!CanProcessRespawnChecks())
+            return;
+
         if (Input.GetKeyDown(manualRespawnKey))
         {
             Respawn();
@@ -112,5 +115,10 @@ public class RespawnManager2D : MonoBehaviour
 
         runStartPosition = player.position;
         hasRunStartPosition = true;
+    }
+
+    private bool CanProcessRespawnChecks()
+    {
+        return Time.timeScale > 0f;
     }
 }

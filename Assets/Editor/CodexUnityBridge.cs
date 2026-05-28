@@ -306,6 +306,21 @@ public static class CodexUnityBridge
 
         if (settings.setSortingOrder)
             spriteRenderer.sortingOrder = settings.sortingOrder;
+
+        if (settings.setColor)
+            spriteRenderer.color = settings.color;
+
+        if (settings.setBuiltinSprite)
+            spriteRenderer.sprite = LoadBuiltinSprite(settings.builtinSpritePath);
+
+        if (settings.setSpriteFromObjectName)
+            spriteRenderer.sprite = GetSpriteFromObject(settings.spriteFromObjectName);
+
+        if (settings.setDrawMode)
+            spriteRenderer.drawMode = ParseEnumValue<SpriteDrawMode>(settings.drawMode, "SpriteRenderer.drawMode");
+
+        if (settings.setSize)
+            spriteRenderer.size = settings.size;
     }
 
     private static bool HasBoxCollider2DSettings(BoxCollider2DSettings settings)
@@ -323,7 +338,13 @@ public static class CodexUnityBridge
     private static bool HasSpriteRendererSettings(SpriteRendererSettings settings)
     {
         return settings != null &&
-            (settings.setSortingLayerName || settings.setSortingOrder);
+            (settings.setSortingLayerName ||
+                settings.setSortingOrder ||
+                settings.setColor ||
+                settings.setBuiltinSprite ||
+                settings.setSpriteFromObjectName ||
+                settings.setDrawMode ||
+                settings.setSize);
     }
 
     private static void ApplyFieldRequests(Component component, FieldValueRequest[] fields)
@@ -491,6 +512,38 @@ public static class CodexUnityBridge
         return false;
     }
 
+    private static Sprite LoadBuiltinSprite(string builtinSpritePath)
+    {
+        string path = string.IsNullOrWhiteSpace(builtinSpritePath)
+            ? "UI/Skin/UISprite.psd"
+            : builtinSpritePath.Trim();
+
+        Sprite sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(path);
+        if (sprite == null)
+            throw new InvalidOperationException($"Built-in sprite not found: {path}");
+
+        return sprite;
+    }
+
+    private static Sprite GetSpriteFromObject(string objectName)
+    {
+        if (string.IsNullOrWhiteSpace(objectName))
+            throw new InvalidOperationException("SpriteRenderer.spriteFromObjectName cannot be empty.");
+
+        GameObject source = GameObject.Find(objectName.Trim());
+        if (source == null)
+            throw new InvalidOperationException($"Sprite source GameObject not found: {objectName}");
+
+        SpriteRenderer sourceRenderer = source.GetComponent<SpriteRenderer>();
+        if (sourceRenderer == null)
+            throw new InvalidOperationException($"Sprite source GameObject has no SpriteRenderer: {objectName}");
+
+        if (sourceRenderer.sprite == null)
+            throw new InvalidOperationException($"Sprite source GameObject has no sprite assigned: {objectName}");
+
+        return sourceRenderer.sprite;
+    }
+
     private static Type FindComponentType(string typeName)
     {
         if (string.Equals(typeName, nameof(Transform), StringComparison.Ordinal) ||
@@ -597,6 +650,16 @@ public static class CodexUnityBridge
         public string sortingLayerName;
         public bool setSortingOrder;
         public int sortingOrder;
+        public bool setColor;
+        public Color color = Color.white;
+        public bool setBuiltinSprite;
+        public string builtinSpritePath;
+        public bool setSpriteFromObjectName;
+        public string spriteFromObjectName;
+        public bool setDrawMode;
+        public string drawMode;
+        public bool setSize;
+        public Vector2 size;
     }
 
     [Serializable]

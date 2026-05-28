@@ -82,3 +82,19 @@
 - EN: Kept manual respawn on the `R` key and automatic respawn below `fallYThreshold`.
 - KR: 발사 이동, 벽 반발, 카메라 추적, 타이머, 메뉴/일시정지는 건드리지 않았다.
 - EN: Left launch movement, wall bounce, camera follow, timer, menu, and pause behavior untouched.
+
+## 2026-05-28 - Stage01 Blockout And Respawn Guard / Stage01 블록아웃과 리스폰 입력 차단
+- KR: 첫 스테이지 블록아웃을 추가하고, 발사형 이동을 검증할 수 있도록 넓은 시작 바닥과 점진적으로 올라가는 플랫폼을 배치했다.
+- EN: Added the first Stage01 blockout with a wide start floor and gradually rising platforms to validate launch-based movement.
+- KR: Stage01 플랫폼이 중심만 작게 보이던 문제를 수정하고, SpriteRenderer 시각 크기가 BoxCollider2D/플랫폼 크기와 일치하도록 조정했다.
+- EN: Fixed Stage01 platforms rendering only at the center and aligned SpriteRenderer visual size with BoxCollider2D/platform size.
+- KR: GoalMarker가 점처럼 보이지 않도록 노란색 마커의 크기와 색상을 조정했다.
+- EN: Adjusted GoalMarker size and yellow color so it no longer appears as a tiny dot.
+- KR: Esc 일시정지, Main Menu, Settings 상태에서는 R 수동 리스폰과 fallYThreshold 자동 리스폰 체크를 막고, 정상 플레이 중에는 둘 다 유지했다.
+- EN: Blocked R manual respawn and fallYThreshold checks during Esc pause, Main Menu, and Settings, while preserving both during active play.
+- KR: 예전 연습용 루트 Square 계열 구조물은 제거하고, Stage01_Blockout, player, Main Camera, GameSessionManager, RespawnManager는 유지했다.
+- EN: Removed old root Square practice structures while keeping Stage01_Blockout, player, Main Camera, GameSessionManager, and RespawnManager.
+- KR: 기존 발사 이동, 벽 반발, 카메라 추적, 타이머, 메인 메뉴/일시정지, 설정 메뉴 로직은 불필요하게 건드리지 않았다.
+- EN: Left existing launch movement, wall bounce, camera follow, timer, main menu/pause, and settings menu logic unchanged.
+- KR: 이번 블록아웃은 최종 맵이 아니라 조작감 검증용 1차 구간이다.
+- EN: This blockout is a first-pass feel-test section, not the final map.
