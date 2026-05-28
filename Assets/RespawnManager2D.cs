@@ -12,16 +12,17 @@ public class RespawnManager2D : MonoBehaviour
     [SerializeField] private float respawnGraceTime = 0.15f;
     [SerializeField] private bool resetVelocityOnRespawn = true;
 
-    private Vector3 currentRespawnPosition;
+    private Vector3 runStartPosition;
     private float graceTimer;
-    private bool hasRespawnPosition;
+    private bool hasRunStartPosition;
 
-    public Vector3 CurrentRespawnPosition => currentRespawnPosition;
+    public Vector3 RunStartPosition => runStartPosition;
     public bool IsInRespawnGrace => graceTimer > 0f;
 
     private void Awake()
     {
         ResolveReferences();
+        CaptureRunStartPosition();
     }
 
     private void Update()
@@ -45,10 +46,10 @@ public class RespawnManager2D : MonoBehaviour
             Respawn();
     }
 
+    [System.Obsolete("Checkpoint respawns are no longer used. RespawnManager2D now respawns to the run start position.")]
     public void SetCheckpoint(Vector3 respawnPosition)
     {
-        currentRespawnPosition = respawnPosition;
-        hasRespawnPosition = true;
+        Debug.LogWarning("SetCheckpoint is ignored because this game mode respawns from the run start position.", this);
     }
 
     public void Respawn()
@@ -59,8 +60,8 @@ public class RespawnManager2D : MonoBehaviour
         if (player == null)
             return;
 
-        if (!hasRespawnPosition)
-            SetCheckpoint(player.position);
+        if (!hasRunStartPosition)
+            CaptureRunStartPosition();
 
         if (resetVelocityOnRespawn && playerRb != null)
         {
@@ -72,10 +73,10 @@ public class RespawnManager2D : MonoBehaviour
             playerRb.angularVelocity = 0f;
         }
 
-        player.position = currentRespawnPosition;
+        player.position = runStartPosition;
 
         if (playerRb != null)
-            playerRb.position = currentRespawnPosition;
+            playerRb.position = runStartPosition;
 
         graceTimer = Mathf.Max(0f, respawnGraceTime);
     }
@@ -102,8 +103,14 @@ public class RespawnManager2D : MonoBehaviour
 
         if (playerRb == null && player != null)
             playerRb = player.GetComponent<Rigidbody2D>();
+    }
 
-        if (!hasRespawnPosition && player != null)
-            SetCheckpoint(player.position);
+    private void CaptureRunStartPosition()
+    {
+        if (player == null)
+            return;
+
+        runStartPosition = player.position;
+        hasRunStartPosition = true;
     }
 }

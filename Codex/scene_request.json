@@ -2,46 +2,11 @@
   "scenePath": "Assets/asd.unity",
   "saveScene": true,
   "allowProtectedSampleScene": false,
-  "objectsToDelete": [],
-  "objectsToCreate": [
+  "objectsToDelete": [
     {
-      "name": "GameSessionManager",
-      "parentPath": "",
-      "replaceIfExists": true,
-      "position": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "rotationEuler": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0
-      },
-      "scale": {
-        "x": 1.0,
-        "y": 1.0,
-        "z": 1.0
-      },
-      "layerName": "Default",
-      "tag": "Untagged",
-      "components": [
-        {
-          "type": "RunTimerUI",
-          "setEnabled": true,
-          "enabled": true
-        },
-        {
-          "type": "PauseMenuController",
-          "setEnabled": true,
-          "enabled": true
-        },
-        {
-          "type": "MainMenuController",
-          "setEnabled": true,
-          "enabled": true
-        }
-      ]
+      "name": "Checkpoint_Test",
+      "failIfMissing": false
     }
-  ]
+  ],
+  "objectsToCreate": []
 }

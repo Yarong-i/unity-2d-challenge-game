@@ -72,3 +72,13 @@
 - EN: Preserved the Volume slider and existing Start/Settings/Quit and Esc pause flows.
 - KR: 기존 발사 이동, 벽 반발, 카메라 추적, 체크포인트/리스폰, 타이머는 건드리지 않았다.
 - EN: Left launch movement, wall bounce, camera follow, checkpoint/respawn, and timer behavior untouched.
+
+## 2026-05-28 - Run Start Respawn / 시작점 리스폰
+- KR: 기본 모드에서 중간 체크포인트를 제거하고, 도전형 등반 게임의 긴장감을 위해 실패 시 시작 위치로 돌아가도록 변경했다.
+- EN: Removed mid-run checkpoints from the default mode and changed failures to respawn at the start position to better fit the challenge-climbing tension.
+- KR: `Checkpoint_Test` 오브젝트를 제거하고 `RespawnManager2D`를 run start position 기반 리스폰 구조로 정리했다.
+- EN: Removed the `Checkpoint_Test` object and reorganized `RespawnManager2D` around a run start position respawn flow.
+- KR: `R` 키 수동 리스폰과 `fallYThreshold` 자동 리스폰은 유지했다.
+- EN: Kept manual respawn on the `R` key and automatic respawn below `fallYThreshold`.
+- KR: 발사 이동, 벽 반발, 카메라 추적, 타이머, 메뉴/일시정지는 건드리지 않았다.
+- EN: Left launch movement, wall bounce, camera follow, timer, menu, and pause behavior untouched.
