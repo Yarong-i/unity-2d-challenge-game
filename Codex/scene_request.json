@@ -1,20 +1,7 @@
 {
   "scenePath": "Assets/asd.unity",
-  "saveScene": true,
+  "saveScene": false,
   "allowProtectedSampleScene": false,
-  "objectsToDelete": [
-    {
-      "name": "Square",
-      "failIfMissing": false
-    },
-    {
-      "name": "Square (1)",
-      "failIfMissing": false
-    },
-    {
-      "name": "Square (2)",
-      "failIfMissing": false
-    }
-  ],
+  "objectsToDelete": [],
   "objectsToCreate": []
 }
