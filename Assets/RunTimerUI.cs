@@ -10,6 +10,9 @@ public class RunTimerUI : MonoBehaviour
     private float elapsedTime;
     private bool timerRunning;
 
+    public float ElapsedTime => elapsedTime;
+    public string FormattedElapsedTime => FormatElapsedTime(elapsedTime);
+
     private void Awake()
     {
         timerRunning = false;
@@ -102,8 +105,14 @@ public class RunTimerUI : MonoBehaviour
         if (timerText == null)
             return;
 
-        int minutes = Mathf.FloorToInt(elapsedTime / 60f);
-        float seconds = elapsedTime - minutes * 60f;
-        timerText.text = $"{label} {minutes:00}:{seconds:00.00}";
+        timerText.text = $"{label} {FormattedElapsedTime}";
+    }
+
+    public string FormatElapsedTime(float time)
+    {
+        time = Mathf.Max(0f, time);
+        int minutes = Mathf.FloorToInt(time / 60f);
+        float seconds = time - minutes * 60f;
+        return $"{minutes:00}:{seconds:00.00}";
     }
 }

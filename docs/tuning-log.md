@@ -98,3 +98,19 @@
 - EN: Left existing launch movement, wall bounce, camera follow, timer, main menu/pause, and settings menu logic unchanged.
 - KR: 이번 블록아웃은 최종 맵이 아니라 조작감 검증용 1차 구간이다.
 - EN: This blockout is a first-pass feel-test section, not the final map.
+
+## 2026-05-31 - Stage01 Goal And Stage Clear / Stage01 골과 스테이지 클리어
+- KR: `Stage01_GoalMarker`를 실제 클리어 지점으로 연결했다.
+- EN: Connected `Stage01_GoalMarker` as the real stage clear point.
+- KR: 플레이어가 Goal에 닿으면 런타임 `STAGE CLEAR` UI가 표시된다.
+- EN: When the player touches the Goal, a runtime `STAGE CLEAR` UI is shown.
+- KR: 클리어 시 `RunTimerUI`가 정지되고 Clear Time을 표시한다.
+- EN: On clear, `RunTimerUI` stops and the clear time is displayed.
+- KR: Restart 버튼은 시작 위치 리스폰과 타이머 리셋/재시작을 수행한다.
+- EN: The Restart button respawns at the start position and resets/restarts the timer.
+- KR: Quit 버튼을 추가해 에디터에서는 Play Mode 종료, 빌드에서는 애플리케이션 종료를 처리한다.
+- EN: Added a Quit button that exits Play Mode in the Editor and quits the app in builds.
+- KR: 기본 모드는 체크포인트 없이 시작점 리스폰 구조를 유지한다.
+- EN: The default mode keeps the start-position respawn structure without checkpoints.
+- KR: 기존 발사 이동, 벽 반발, 카메라 추적, 메인 메뉴, 일시정지, 설정 메뉴는 불필요하게 건드리지 않았다.
+- EN: Existing launch movement, wall bounce, camera follow, main menu, pause, and settings menu behavior were left untouched.
