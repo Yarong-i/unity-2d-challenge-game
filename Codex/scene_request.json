@@ -1,7 +1,200 @@
 {
   "scenePath": "Assets/asd.unity",
-  "saveScene": false,
+  "saveScene": true,
   "allowProtectedSampleScene": false,
   "objectsToDelete": [],
-  "objectsToCreate": []
+  "objectsToCreate": [
+    {
+      "name": "Stage01_StartPlatform",
+      "parentPath": "Stage01_Blockout",
+      "replaceIfExists": true,
+      "position": { "x": -10.4, "y": 0.75, "z": 0 },
+      "rotationEuler": { "x": 0, "y": 0, "z": 0 },
+      "scale": { "x": 6.5, "y": 0.7, "z": 1 },
+      "layerName": "Ground",
+      "tag": "Ground",
+      "components": [
+        {
+          "type": "BoxCollider2D",
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": false,
+            "setSize": true,
+            "size": { "x": 1, "y": 1 },
+            "setOffset": true,
+            "offset": { "x": 0, "y": 0 }
+          }
+        },
+        {
+          "type": "SpriteRenderer",
+          "spriteRenderer": {
+            "setColor": true,
+            "color": { "r": 0.9, "g": 0.9, "b": 0.9, "a": 1 },
+            "setSize": true,
+            "size": { "x": 1, "y": 1 }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stage01_Platform_01",
+      "parentPath": "Stage01_Blockout",
+      "replaceIfExists": true,
+      "position": { "x": -6.0, "y": 2.55, "z": 0 },
+      "rotationEuler": { "x": 0, "y": 0, "z": 0 },
+      "scale": { "x": 2.25, "y": 0.55, "z": 1 },
+      "layerName": "Ground",
+      "tag": "Ground",
+      "components": [
+        {
+          "type": "BoxCollider2D",
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": false,
+            "setSize": true,
+            "size": { "x": 1, "y": 1 },
+            "setOffset": true,
+            "offset": { "x": 0, "y": 0 }
+          }
+        },
+        {
+          "type": "SpriteRenderer",
+          "spriteRenderer": {
+            "setColor": true,
+            "color": { "r": 0.9, "g": 0.9, "b": 0.9, "a": 1 },
+            "setSize": true,
+            "size": { "x": 1, "y": 1 }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stage01_Platform_02",
+      "parentPath": "Stage01_Blockout",
+      "replaceIfExists": true,
+      "position": { "x": -1.25, "y": 5.2, "z": 0 },
+      "rotationEuler": { "x": 0, "y": 0, "z": 0 },
+      "scale": { "x": 1.55, "y": 0.55, "z": 1 },
+      "layerName": "Ground",
+      "tag": "Ground",
+      "components": [
+        {
+          "type": "BoxCollider2D",
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": false,
+            "setSize": true,
+            "size": { "x": 1, "y": 1 },
+            "setOffset": true,
+            "offset": { "x": 0, "y": 0 }
+          }
+        },
+        {
+          "type": "SpriteRenderer",
+          "spriteRenderer": {
+            "setColor": true,
+            "color": { "r": 0.9, "g": 0.9, "b": 0.9, "a": 1 },
+            "setSize": true,
+            "size": { "x": 1, "y": 1 }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stage01_Platform_03",
+      "parentPath": "Stage01_Blockout",
+      "replaceIfExists": true,
+      "position": { "x": -2.35, "y": 8.0, "z": 0 },
+      "rotationEuler": { "x": 0, "y": 0, "z": 0 },
+      "scale": { "x": 1.25, "y": 0.5, "z": 1 },
+      "layerName": "Ground",
+      "tag": "Ground",
+      "components": [
+        {
+          "type": "BoxCollider2D",
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": false,
+            "setSize": true,
+            "size": { "x": 1, "y": 1 },
+            "setOffset": true,
+            "offset": { "x": 0, "y": 0 }
+          }
+        },
+        {
+          "type": "SpriteRenderer",
+          "spriteRenderer": {
+            "setColor": true,
+            "color": { "r": 0.9, "g": 0.9, "b": 0.9, "a": 1 },
+            "setSize": true,
+            "size": { "x": 1, "y": 1 }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stage01_Platform_04",
+      "parentPath": "Stage01_Blockout",
+      "replaceIfExists": true,
+      "position": { "x": 1.55, "y": 10.05, "z": 0 },
+      "rotationEuler": { "x": 0, "y": 0, "z": 0 },
+      "scale": { "x": 0.9, "y": 0.5, "z": 1 },
+      "layerName": "Ground",
+      "tag": "Ground",
+      "components": [
+        {
+          "type": "BoxCollider2D",
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": false,
+            "setSize": true,
+            "size": { "x": 1, "y": 1 },
+            "setOffset": true,
+            "offset": { "x": 0, "y": 0 }
+          }
+        },
+        {
+          "type": "SpriteRenderer",
+          "spriteRenderer": {
+            "setColor": true,
+            "color": { "r": 0.9, "g": 0.9, "b": 0.9, "a": 1 },
+            "setSize": true,
+            "size": { "x": 1, "y": 1 }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stage01_GoalMarker",
+      "parentPath": "Stage01_Blockout",
+      "replaceIfExists": true,
+      "position": { "x": 3.25, "y": 11.85, "z": 0 },
+      "rotationEuler": { "x": 0, "y": 0, "z": 0 },
+      "scale": { "x": 0.75, "y": 0.75, "z": 1 },
+      "layerName": "Default",
+      "tag": "Untagged",
+      "components": [
+        {
+          "type": "BoxCollider2D",
+          "boxCollider2D": {
+            "setIsTrigger": true,
+            "isTrigger": true,
+            "setSize": true,
+            "size": { "x": 1, "y": 1 },
+            "setOffset": true,
+            "offset": { "x": 0, "y": 0 }
+          }
+        },
+        {
+          "type": "SpriteRenderer",
+          "spriteRenderer": {
+            "setColor": true,
+            "color": { "r": 1, "g": 0.85, "b": 0.1, "a": 1 },
+            "setSize": true,
+            "size": { "x": 1, "y": 1 }
+          }
+        }
+      ]
+    }
+  ]
 }

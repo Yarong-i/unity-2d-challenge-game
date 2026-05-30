@@ -114,3 +114,21 @@
 - EN: The default mode keeps the start-position respawn structure without checkpoints.
 - KR: 기존 발사 이동, 벽 반발, 카메라 추적, 메인 메뉴, 일시정지, 설정 메뉴는 불필요하게 건드리지 않았다.
 - EN: Existing launch movement, wall bounce, camera follow, main menu, pause, and settings menu behavior were left untouched.
+
+## 2026-05-31 - Stage01 Difficulty Passes / Stage01 난이도 패스
+- KR: `Stage01_Blockout`의 1차/2차 플레이 감각 조정을 진행했다.
+- EN: Ran first and second play-feel passes on `Stage01_Blockout`.
+- KR: 기존 배치가 현재 발사 힘에 비해 너무 쉬워 플랫폼 높이 차와 간격을 키웠다.
+- EN: Increased platform height gaps and spacing because the old layout was too easy for the current launch force.
+- KR: 초반은 발사/착지 연습 구간으로 유지하고, 중후반은 더 정확한 방향과 힘 조절이 필요하도록 조정했다.
+- EN: Kept the opening as launch/landing practice, while making mid and late sections require more precise direction and force control.
+- KR: 후반 플랫폼 폭을 줄이고 Goal 직전 구간의 긴장감을 높였다.
+- EN: Narrowed late platforms and increased tension before the Goal.
+- KR: 처음 플레이하는 숙련자도 1~3번 정도는 실패할 수 있도록 빈 공간과 실패 가능성을 늘렸다.
+- EN: Added more empty space and failure risk so even skilled first-time players may fall one to three times.
+- KR: 기본 모드는 체크포인트 없이 시작점 리스폰 구조를 유지했다.
+- EN: Kept the default mode on start-position respawn without checkpoints.
+- KR: 기존 발사 이동, 벽 반발, 카메라 추적, 리스폰, 타이머, 메뉴/일시정지, 설정, Stage Clear 로직은 건드리지 않았다.
+- EN: Left launch movement, wall bounce, camera follow, respawn, timer, menu/pause, settings, and Stage Clear logic untouched.
+- KR: 이번 조정은 최종 맵이 아니라 Stage01 블록아웃 난이도 패스다.
+- EN: This is a Stage01 blockout difficulty pass, not the final map.
