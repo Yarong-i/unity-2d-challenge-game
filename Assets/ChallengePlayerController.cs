@@ -52,16 +52,24 @@ public class ChallengePlayerController : MonoBehaviour
 
     [Header("Wall Collision")]
     [SerializeField] private bool enableWallBounce = true;
-    [SerializeField] private float minWallBounceSpeed = 0.75f;
-    [SerializeField] private float wallBounceMultiplier = 0.55f;
-    [SerializeField] private float wallBounceUpwardBoost = 0.30f;
-    [SerializeField] private float maxWallBounceSpeed = 4.8f;
-    [SerializeField] private float minWallNormalAbsX = 0.60f;
-    [SerializeField] private float maxWallNormalY = 0.40f;
+    [SerializeField] private bool enableGenericWallBounce = true;
+    [SerializeField] private float minWallBounceSpeed = 0.35f;
+    [SerializeField] private float wallBounceMultiplier = 0.74f;
+    [SerializeField] private float wallBounceUpwardBoost = 0.48f;
+    [SerializeField] private float maxWallBounceSpeed = 6.1f;
+    [SerializeField] private float minWallNormalAbsX = 0.45f;
+    [SerializeField] private float maxWallNormalY = 0.55f;
     [SerializeField] private float wallBounceCooldown = 0.10f;
-    [SerializeField] private float wallDetachSpeed = 1.15f;
-    [SerializeField] private float wallStableLockoutTime = 0.18f;
+    [SerializeField] private float wallDetachSpeed = 1.55f;
+    [SerializeField] private float wallStableLockoutTime = 0.16f;
+    [SerializeField] private float genericWallMinBounceSpeed = 0.25f;
+    [SerializeField] private float genericWallBounceMultiplier = 0.45f;
+    [SerializeField] private float genericWallUpwardBoost = 0.26f;
+    [SerializeField] private float genericWallDetachSpeed = 0.95f;
+    [SerializeField] private float genericWallMaxBounceSpeed = 3.8f;
+    [SerializeField] private float genericWallStableLockoutTime = 0.06f;
     [SerializeField] private bool useRuntimeNoFrictionMaterial = true;
+    [SerializeField] private bool showWallBounceDebug = false;
 
     [Header("Ground Movement")]
     [SerializeField] private float groundDeceleration = 70f;
@@ -111,6 +119,7 @@ public class ChallengePlayerController : MonoBehaviour
     private bool hasEdgeStableGroundContact;
     private bool hasWallContact;
     private bool launchQueued;
+    private bool wallBounceAppliedThisStep;
     private Vector2 dragStartWorld;
     private Vector2 currentMouseWorld;
     private Vector2 preCollisionVelocity;
@@ -161,6 +170,12 @@ public class ChallengePlayerController : MonoBehaviour
         wallBounceCooldown = Mathf.Max(0f, wallBounceCooldown);
         wallDetachSpeed = Mathf.Max(0f, wallDetachSpeed);
         wallStableLockoutTime = Mathf.Max(0f, wallStableLockoutTime);
+        genericWallMinBounceSpeed = Mathf.Max(0f, genericWallMinBounceSpeed);
+        genericWallBounceMultiplier = Mathf.Max(0f, genericWallBounceMultiplier);
+        genericWallUpwardBoost = Mathf.Max(0f, genericWallUpwardBoost);
+        genericWallDetachSpeed = Mathf.Max(0f, genericWallDetachSpeed);
+        genericWallMaxBounceSpeed = Mathf.Max(0f, genericWallMaxBounceSpeed);
+        genericWallStableLockoutTime = Mathf.Max(0f, genericWallStableLockoutTime);
 
         groundDeceleration = Mathf.Max(0f, groundDeceleration);
         stopSnapSpeed = Mathf.Max(0f, stopSnapSpeed);
@@ -223,6 +238,7 @@ public class ChallengePlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        wallBounceAppliedThisStep = false;
         RefreshGrounding();
         UpdateWallTimers(Time.fixedDeltaTime);
 
@@ -259,7 +275,7 @@ public class ChallengePlayerController : MonoBehaviour
 
         RefreshGrounding();
         UpdateGroundedStabilityGrace(Time.fixedDeltaTime);
-        if (state != MovementState.Charging)
+        if (state != MovementState.Charging && !wallBounceAppliedThisStep)
             state = ComputeMovementState(Time.fixedDeltaTime);
 
         StorePreCollisionVelocity();
@@ -618,48 +634,154 @@ public class ChallengePlayerController : MonoBehaviour
 
     private void TryApplyWallBounce(Collision2D collision)
     {
-        if (!enableWallBounce || state != MovementState.Airborne || isGrounded || wallBounceCooldownTimer > 0f)
+        if (!enableWallBounce || collision.collider == null)
             return;
 
-        if (collision.collider == null || !IsInGroundLayer(collision.collider.gameObject.layer))
-            return;
+        WallBounceSurface2D bounceSurface = collision.collider.GetComponentInParent<WallBounceSurface2D>();
+        bool hasExplicitSurface = bounceSurface != null && bounceSurface.forceBounce;
 
-        Vector2 incomingVelocity = preCollisionVelocity;
+        if (wallBounceCooldownTimer > 0f)
+        {
+            LogWallBounceSkip("cooldown");
+            return;
+        }
+
+        if (!hasExplicitSurface && !enableGenericWallBounce)
+        {
+            LogWallBounceSkip("generic wall bounce ignored");
+            return;
+        }
+
+        if (state == MovementState.Charging || (!hasExplicitSurface && (state != MovementState.Airborne || isGrounded)))
+        {
+            LogWallBounceSkip("not airborne");
+            return;
+        }
+
+        if (!hasExplicitSurface && !IsInGroundLayer(collision.collider.gameObject.layer))
+        {
+            LogWallBounceSkip("not ground layer");
+            return;
+        }
+
+        Vector2 incomingVelocity = GetWallBounceIncomingVelocity(collision);
         float speed = incomingVelocity.magnitude;
-        if (speed < minWallBounceSpeed)
+        float minBounceSpeed = hasExplicitSurface ? minWallBounceSpeed : genericWallMinBounceSpeed;
+        if (speed < minBounceSpeed)
+        {
+            LogWallBounceSkip($"speed {speed:0.00} < {minBounceSpeed:0.00}");
             return;
+        }
 
+        bool ignoredTopContact = false;
+        bool ignoredBottomContact = false;
         for (int i = 0; i < collision.contactCount; i++)
         {
             ContactPoint2D contact = collision.GetContact(i);
-            if (TryGetWallBounceNormal(contact.normal, incomingVelocity, out Vector2 bounceNormal))
+            if (IsIgnoredWallBounceSurfaceContact(bounceSurface, contact.normal, out string ignoredReason))
             {
-                ApplyWallBounce(incomingVelocity, bounceNormal);
+                ignoredTopContact |= ignoredReason == "top";
+                ignoredBottomContact |= ignoredReason == "bottom";
+                continue;
+            }
+
+            if (TryGetWallBounceNormal(contact.normal, incomingVelocity, hasExplicitSurface, out Vector2 bounceNormal))
+            {
+                ApplyWallBounce(incomingVelocity, bounceNormal, bounceSurface, hasExplicitSurface);
                 return;
             }
         }
+
+        if (ignoredTopContact)
+            LogWallBounceSkip("ignored top contact");
+        else if (ignoredBottomContact)
+            LogWallBounceSkip("ignored bottom contact");
+        else
+            LogWallBounceSkip("no side contact");
     }
 
-    private void ApplyWallBounce(Vector2 incomingVelocity, Vector2 bounceNormal)
+    private bool IsIgnoredWallBounceSurfaceContact(
+        WallBounceSurface2D bounceSurface,
+        Vector2 contactNormal,
+        out string reason)
     {
-        Vector2 bouncedVelocity = Vector2.Reflect(incomingVelocity, bounceNormal) * wallBounceMultiplier;
-        bouncedVelocity += Vector2.up * wallBounceUpwardBoost;
-        bouncedVelocity = EnsureMinimumDetachVelocity(bouncedVelocity, bounceNormal);
+        reason = string.Empty;
+        if (bounceSurface == null || bounceSurface.IsBounceAllowedForNormal(contactNormal))
+            return false;
+
+        reason = bounceSurface.IsTopContact(contactNormal)
+            ? "top"
+            : bounceSurface.IsBottomContact(contactNormal)
+                ? "bottom"
+                : "non-side";
+
+        return true;
+    }
+
+    private Vector2 GetWallBounceIncomingVelocity(Collision2D collision)
+    {
+        Vector2 relativeVelocity = collision.relativeVelocity;
+        return relativeVelocity.sqrMagnitude > preCollisionVelocity.sqrMagnitude
+            ? relativeVelocity
+            : preCollisionVelocity;
+    }
+
+    private void ApplyWallBounce(
+        Vector2 incomingVelocity,
+        Vector2 bounceNormal,
+        WallBounceSurface2D bounceSurface,
+        bool hasExplicitSurface)
+    {
+        float defaultBounceMultiplier = hasExplicitSurface ? wallBounceMultiplier : genericWallBounceMultiplier;
+        float defaultUpwardBoost = hasExplicitSurface ? wallBounceUpwardBoost : genericWallUpwardBoost;
+        float defaultDetachSpeed = hasExplicitSurface ? wallDetachSpeed : genericWallDetachSpeed;
+        float maxBounceSpeed = hasExplicitSurface ? maxWallBounceSpeed : genericWallMaxBounceSpeed;
+        float stableLockoutTime = hasExplicitSurface ? wallStableLockoutTime : genericWallStableLockoutTime;
+
+        float bounceMultiplier = GetOverrideOrDefault(
+            hasExplicitSurface && bounceSurface != null ? bounceSurface.bounceMultiplierOverride : -1f,
+            defaultBounceMultiplier);
+        float upwardBoost = GetOverrideOrDefault(
+            hasExplicitSurface && bounceSurface != null ? bounceSurface.upwardBoostOverride : -1f,
+            defaultUpwardBoost);
+        float detachSpeed = GetOverrideOrDefault(
+            hasExplicitSurface && bounceSurface != null ? bounceSurface.detachSpeedOverride : -1f,
+            defaultDetachSpeed);
+
+        Vector2 bouncedVelocity = Vector2.Reflect(incomingVelocity, bounceNormal) * bounceMultiplier;
+        bouncedVelocity += Vector2.up * upwardBoost;
+        bouncedVelocity = EnsureMinimumDetachVelocity(bouncedVelocity, bounceNormal, detachSpeed, maxBounceSpeed);
 
         rb.linearVelocity = bouncedVelocity;
         wallBounceCooldownTimer = wallBounceCooldown;
-        wallStableLockoutTimer = wallStableLockoutTime;
+        wallStableLockoutTimer = stableLockoutTime;
+        wallBounceAppliedThisStep = true;
         stableSettleTimer = 0f;
         stableContactSettleTimer = 0f;
         stableContactGraceTimer = 0f;
         groundedStabilityGraceTimer = 0f;
         state = MovementState.Airborne;
+
+        if (showWallBounceDebug)
+        {
+            string bounceType = hasExplicitSurface ? "explicit surface bounce" : "generic wall bounce";
+            Debug.Log($"Wall bounce {bounceType}: incoming={incomingVelocity}, normal={bounceNormal}, outgoing={bouncedVelocity}");
+        }
     }
 
-    private bool TryGetWallBounceNormal(Vector2 contactNormal, Vector2 incomingVelocity, out Vector2 bounceNormal)
+    private float GetOverrideOrDefault(float overrideValue, float defaultValue)
+    {
+        return overrideValue >= 0f ? overrideValue : defaultValue;
+    }
+
+    private bool TryGetWallBounceNormal(
+        Vector2 contactNormal,
+        Vector2 incomingVelocity,
+        bool forceWallSurface,
+        out Vector2 bounceNormal)
     {
         bounceNormal = contactNormal.normalized;
-        if (!IsWallContactNormal(bounceNormal))
+        if (!forceWallSurface && !IsWallContactNormal(bounceNormal))
             return false;
 
         float normalVelocity = Vector2.Dot(incomingVelocity, bounceNormal);
@@ -672,10 +794,14 @@ public class ChallengePlayerController : MonoBehaviour
         return normalVelocity < 0f;
     }
 
-    private Vector2 EnsureMinimumDetachVelocity(Vector2 velocity, Vector2 wallNormal)
+    private Vector2 EnsureMinimumDetachVelocity(
+        Vector2 velocity,
+        Vector2 wallNormal,
+        float detachSpeed,
+        float maxBounceSpeed)
     {
-        float maxSpeed = Mathf.Max(0f, maxWallBounceSpeed);
-        float normalSpeed = Mathf.Max(Vector2.Dot(velocity, wallNormal), wallDetachSpeed);
+        float maxSpeed = Mathf.Max(0f, maxBounceSpeed);
+        float normalSpeed = Mathf.Max(Vector2.Dot(velocity, wallNormal), Mathf.Max(0f, detachSpeed));
         if (maxSpeed > 0f)
             normalSpeed = Mathf.Min(normalSpeed, maxSpeed);
 
@@ -693,6 +819,12 @@ public class ChallengePlayerController : MonoBehaviour
     private bool IsWallContactNormal(Vector2 normal)
     {
         return Mathf.Abs(normal.x) >= minWallNormalAbsX && Mathf.Abs(normal.y) <= maxWallNormalY;
+    }
+
+    private void LogWallBounceSkip(string reason)
+    {
+        if (showWallBounceDebug)
+            Debug.Log($"Wall bounce skipped: {reason}");
     }
 
     private bool CheckGrounded()
@@ -933,6 +1065,103 @@ public class ChallengePlayerController : MonoBehaviour
             Approximately(wallBounceCooldown, 0.10f) &&
             Approximately(wallDetachSpeed, 1.60f);
 
+        bool hasSoftWallBounceDefaults =
+            Approximately(minWallBounceSpeed, 0.75f) &&
+            Approximately(wallBounceMultiplier, 0.55f) &&
+            Approximately(wallBounceUpwardBoost, 0.30f) &&
+            Approximately(maxWallBounceSpeed, 4.8f) &&
+            Approximately(minWallNormalAbsX, 0.60f) &&
+            Approximately(maxWallNormalY, 0.40f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 1.15f);
+
+        bool hasOverpoweredSurfaceDefaults =
+            Approximately(minWallBounceSpeed, 0.25f) &&
+            Approximately(wallBounceMultiplier, 0.90f) &&
+            Approximately(wallBounceUpwardBoost, 0.75f) &&
+            Approximately(maxWallBounceSpeed, 7.5f) &&
+            Approximately(minWallNormalAbsX, 0.40f) &&
+            Approximately(maxWallNormalY, 0.75f) &&
+            Approximately(wallBounceCooldown, 0.06f) &&
+            Approximately(wallDetachSpeed, 2.2f);
+
+        bool hasModerateSurfaceDefaults =
+            Approximately(minWallBounceSpeed, 0.35f) &&
+            Approximately(wallBounceMultiplier, 0.62f) &&
+            Approximately(wallBounceUpwardBoost, 0.38f) &&
+            Approximately(maxWallBounceSpeed, 5.2f) &&
+            Approximately(minWallNormalAbsX, 0.45f) &&
+            Approximately(maxWallNormalY, 0.55f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 1.25f);
+
+        bool hasReducedSurfaceDefaultsWithGenericDisabled =
+            !enableGenericWallBounce &&
+            Approximately(minWallBounceSpeed, 0.35f) &&
+            Approximately(wallBounceMultiplier, 0.50f) &&
+            Approximately(wallBounceUpwardBoost, 0.25f) &&
+            Approximately(maxWallBounceSpeed, 4.4f) &&
+            Approximately(minWallNormalAbsX, 0.45f) &&
+            Approximately(maxWallNormalY, 0.55f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 0.95f);
+
+        bool hasReducedSurfaceDefaultsWithGenericEnabled =
+            enableGenericWallBounce &&
+            Approximately(minWallBounceSpeed, 0.35f) &&
+            Approximately(wallBounceMultiplier, 0.50f) &&
+            Approximately(wallBounceUpwardBoost, 0.25f) &&
+            Approximately(maxWallBounceSpeed, 4.4f) &&
+            Approximately(minWallNormalAbsX, 0.45f) &&
+            Approximately(maxWallNormalY, 0.55f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 0.95f);
+
+        bool hasMidSurfaceDefaultsWithWeakGeneric =
+            enableGenericWallBounce &&
+            Approximately(minWallBounceSpeed, 0.35f) &&
+            Approximately(wallBounceMultiplier, 0.56f) &&
+            Approximately(wallBounceUpwardBoost, 0.31f) &&
+            Approximately(maxWallBounceSpeed, 4.8f) &&
+            Approximately(minWallNormalAbsX, 0.45f) &&
+            Approximately(maxWallNormalY, 0.55f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 1.10f) &&
+            Approximately(genericWallBounceMultiplier, 0.18f) &&
+            Approximately(genericWallUpwardBoost, 0.08f) &&
+            Approximately(genericWallDetachSpeed, 0.35f) &&
+            Approximately(genericWallMaxBounceSpeed, 2.2f);
+
+        bool hasDedicatedSurfaceDefaultsWithSoftGeneric =
+            enableGenericWallBounce &&
+            Approximately(minWallBounceSpeed, 0.35f) &&
+            Approximately(wallBounceMultiplier, 0.68f) &&
+            Approximately(wallBounceUpwardBoost, 0.42f) &&
+            Approximately(maxWallBounceSpeed, 5.6f) &&
+            Approximately(minWallNormalAbsX, 0.45f) &&
+            Approximately(maxWallNormalY, 0.55f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 1.35f) &&
+            Approximately(genericWallBounceMultiplier, 0.28f) &&
+            Approximately(genericWallUpwardBoost, 0.14f) &&
+            Approximately(genericWallDetachSpeed, 0.55f) &&
+            Approximately(genericWallMaxBounceSpeed, 2.8f);
+
+        bool hasDedicatedSurfaceDefaultsWithCurrentGeneric =
+            enableGenericWallBounce &&
+            Approximately(minWallBounceSpeed, 0.35f) &&
+            Approximately(wallBounceMultiplier, 0.68f) &&
+            Approximately(wallBounceUpwardBoost, 0.42f) &&
+            Approximately(maxWallBounceSpeed, 5.6f) &&
+            Approximately(minWallNormalAbsX, 0.45f) &&
+            Approximately(maxWallNormalY, 0.55f) &&
+            Approximately(wallBounceCooldown, 0.10f) &&
+            Approximately(wallDetachSpeed, 1.35f) &&
+            Approximately(genericWallBounceMultiplier, 0.38f) &&
+            Approximately(genericWallUpwardBoost, 0.20f) &&
+            Approximately(genericWallDetachSpeed, 0.75f) &&
+            Approximately(genericWallMaxBounceSpeed, 3.3f);
+
         bool hasUninitializedWallBounceDefaults =
             Approximately(minWallBounceSpeed, 0f) &&
             Approximately(wallBounceMultiplier, 0f) &&
@@ -942,18 +1171,37 @@ public class ChallengePlayerController : MonoBehaviour
             Approximately(maxWallNormalY, 0f) &&
             Approximately(wallBounceCooldown, 0f);
 
-        if (!hasFirstWallBounceDefaults && !hasStrongWallBounceDefaults && !hasUninitializedWallBounceDefaults)
+        if (!hasFirstWallBounceDefaults &&
+            !hasStrongWallBounceDefaults &&
+            !hasSoftWallBounceDefaults &&
+            !hasOverpoweredSurfaceDefaults &&
+            !hasModerateSurfaceDefaults &&
+            !hasReducedSurfaceDefaultsWithGenericDisabled &&
+            !hasReducedSurfaceDefaultsWithGenericEnabled &&
+            !hasMidSurfaceDefaultsWithWeakGeneric &&
+            !hasDedicatedSurfaceDefaultsWithSoftGeneric &&
+            !hasDedicatedSurfaceDefaultsWithCurrentGeneric &&
+            !hasUninitializedWallBounceDefaults)
+        {
             return;
+        }
 
-        minWallBounceSpeed = 0.75f;
-        wallBounceMultiplier = 0.55f;
-        wallBounceUpwardBoost = 0.30f;
-        maxWallBounceSpeed = 4.8f;
-        minWallNormalAbsX = 0.60f;
-        maxWallNormalY = 0.40f;
+        enableGenericWallBounce = true;
+        minWallBounceSpeed = 0.35f;
+        wallBounceMultiplier = 0.74f;
+        wallBounceUpwardBoost = 0.48f;
+        maxWallBounceSpeed = 6.1f;
+        minWallNormalAbsX = 0.45f;
+        maxWallNormalY = 0.55f;
         wallBounceCooldown = 0.10f;
-        wallDetachSpeed = 1.15f;
-        wallStableLockoutTime = 0.18f;
+        wallDetachSpeed = 1.55f;
+        wallStableLockoutTime = 0.16f;
+        genericWallMinBounceSpeed = 0.25f;
+        genericWallBounceMultiplier = 0.45f;
+        genericWallUpwardBoost = 0.26f;
+        genericWallDetachSpeed = 0.95f;
+        genericWallMaxBounceSpeed = 3.8f;
+        genericWallStableLockoutTime = 0.06f;
         useRuntimeNoFrictionMaterial = true;
     }
 

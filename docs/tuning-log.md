@@ -132,3 +132,25 @@
 - EN: Left launch movement, wall bounce, camera follow, respawn, timer, menu/pause, settings, and Stage Clear logic untouched.
 - KR: 이번 조정은 최종 맵이 아니라 Stage01 블록아웃 난이도 패스다.
 - EN: This is a Stage01 blockout difficulty pass, not the final map.
+
+## 2026-05-31 - Stage01 Wall Bounce Feel Pass / Stage01 벽 반발 감각 조정
+- KR: 사용자가 Stage01 맵을 수동으로 다시 배치한 상태를 유지하고, 이번 작업은 최종 맵이 아니라 Stage01 확장 블록아웃과 벽/발판 충돌 감각 조정으로 기록한다.
+- EN: Kept the user's manual Stage01 layout changes and recorded this as a Stage01 blockout plus wall/platform collision feel pass, not the final map.
+- KR: `WallBounceSurface2D`로 전용 벽 반발 표면을 명시하고, 전용 벽은 옆면 contact에서만 dedicated wall bounce가 발생하도록 유지했다.
+- EN: Added explicit wall bounce surfaces through `WallBounceSurface2D`, keeping dedicated wall bounce limited to side contacts.
+- KR: 벽 윗면/top contact와 천장/bottom contact에서는 bounce가 발생하지 않고 일반 착지/충돌처럼 동작하도록 유지했다.
+- EN: Kept top contacts and ceiling/bottom contacts from triggering bounce, so they behave like normal landing/collision contacts.
+- KR: 일반 발판 옆면에는 약한 generic side bounce를 적용해 벽에 붙어 일자로 떨어지는 느낌을 줄였다.
+- EN: Added a weaker generic side bounce on normal platform sides to reduce the feeling of sliding straight down.
+- KR: 전용 벽 반발과 일반 오브젝트 옆면 반발이 아직 약해 보여 둘 다 완만하게 상향 조정했다.
+- EN: Slightly raised both dedicated wall bounce and generic side bounce because both still felt too restrained.
+- KR: dedicated wall bounce 기준값은 `wallBounceMultiplier 0.74`, `wallBounceUpwardBoost 0.48`, `maxWallBounceSpeed 6.1`, `wallDetachSpeed 1.55`로 조정했다.
+- EN: Tuned dedicated wall bounce to `wallBounceMultiplier 0.74`, `wallBounceUpwardBoost 0.48`, `maxWallBounceSpeed 6.1`, and `wallDetachSpeed 1.55`.
+- KR: generic wall bounce 기준값은 `genericWallBounceMultiplier 0.45`, `genericWallUpwardBoost 0.26`, `genericWallDetachSpeed 0.95`, `genericWallMaxBounceSpeed 3.8`로 조정했다.
+- EN: Tuned generic wall bounce to `genericWallBounceMultiplier 0.45`, `genericWallUpwardBoost 0.26`, `genericWallDetachSpeed 0.95`, and `genericWallMaxBounceSpeed 3.8`.
+- KR: Low Ceiling 구간은 낮은 각도/힘 조절 테스트로 유지하고, 기본 모드는 체크포인트 없이 시작점 리스폰 구조를 유지했다.
+- EN: Kept the Low Ceiling section as a low-angle/force-control test and preserved the default start-position respawn flow without checkpoints.
+- KR: 기존 카메라 추적, 리스폰, 타이머, 메뉴/일시정지, 설정, Stage Clear 로직은 건드리지 않았다.
+- EN: Left existing camera follow, respawn, timer, menu/pause, settings, and Stage Clear logic untouched.
+- KR: `Codex/scene_request.json`은 `objectsToCreate: []`, `objectsToDelete: []`, `saveScene: false`인 안전 템플릿 상태로 유지했다.
+- EN: Kept `Codex/scene_request.json` in the safe template state with `objectsToCreate: []`, `objectsToDelete: []`, and `saveScene: false`.
