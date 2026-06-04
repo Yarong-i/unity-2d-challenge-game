@@ -154,3 +154,43 @@
 - EN: Left existing camera follow, respawn, timer, menu/pause, settings, and Stage Clear logic untouched.
 - KR: `Codex/scene_request.json`은 `objectsToCreate: []`, `objectsToDelete: []`, `saveScene: false`인 안전 템플릿 상태로 유지했다.
 - EN: Kept `Codex/scene_request.json` in the safe template state with `objectsToCreate: []`, `objectsToDelete: []`, and `saveScene: false`.
+
+## 2026-06-04 - Stage01 Second Expansion Blockout / Stage01 2차 확장 블록아웃
+- KR: Stage01의 절대적인 플레이 분량이 아직 부족해 후반 구간을 더 뒤/위쪽으로 확장했다.
+- EN: Extended the later part of Stage01 farther back and upward because the absolute play length was still too short.
+- KR: 사용자가 수동 배치한 기존 초중반 구조는 최대한 유지하고, 기존 마지막 진행 지점 이후에 새 구조물을 이어 붙였다.
+- EN: Preserved the user's manually adjusted early and mid-stage layout as much as possible, then appended new structures after the previous last progression point.
+- KR: Upper Climb 구간을 추가해 더 위로 올라가는 흐름을 만들었다.
+- EN: Added an Upper Climb section to create a clearer upward progression.
+- KR: Side Bounce 선택 구간을 추가해 벽 반발을 쓰면 안정적이고, 직접 점프는 가능하지만 더 위험하게 만들었다.
+- EN: Added an optional Side Bounce section where wall bounce is safer, while direct jumping remains possible but riskier.
+- KR: Final Precision 구간을 추가해 Goal 직전 마지막 발사의 정확도 요구를 높였다.
+- EN: Added a Final Precision section to raise the accuracy requirement right before the Goal.
+- KR: `Stage01_GoalMarker`를 더 뒤/위쪽 최종 위치로 이동했다.
+- EN: Moved `Stage01_GoalMarker` farther back and upward to the new final destination.
+- KR: 기본 모드는 체크포인트 없이 시작점 리스폰 구조를 유지했다.
+- EN: Kept the default mode on start-position respawn without checkpoints.
+- KR: 기존 발사 이동, 벽 반발 수치, 카메라 추적, 리스폰, 타이머, 메뉴/일시정지, 설정, Stage Clear 로직은 건드리지 않았다.
+- EN: Left existing launch movement, wall bounce tuning, camera follow, respawn, timer, menu/pause, settings, and Stage Clear logic untouched.
+- KR: `Codex/scene_request.json`은 최종적으로 안전 템플릿 상태로 복구했다.
+- EN: Restored `Codex/scene_request.json` to the safe template state after the scene update.
+- KR: 이번 작업은 최종 맵이 아니라 Stage01 2차 확장 블록아웃이다.
+- EN: This pass is a second Stage01 expansion blockout, not the final map.
+
+## 2026-06-04 - Stage01 Late Wall Bounce Difficulty Checkpoint / Stage01 후반 벽 반발 난이도 체크포인트
+- KR: Stage01 후반 구간을 확장하고, 새 후반 Wall Bounce 구간의 발판 위치를 사용자가 직접 조정했다.
+- EN: Extended the late Stage01 route, and the user manually adjusted the platform placement in the new late Wall Bounce section.
+- KR: 기존 배치에서 벽 반발력에 비해 발판이 너무 높고 벽과 멀어 불합리하게 느껴지던 문제를 완화했다.
+- EN: Eased the issue where the platform felt too high and too far from the wall for the current wall bounce strength.
+- KR: 조정 후에도 Stage01 끝 구간으로는 충분히 어려운 난이도를 유지했다.
+- EN: After the adjustment, the section still keeps enough difficulty for the end of Stage01.
+- KR: 반복 테스트 기준 약 8분 정도 도전이 필요한 후반 난이도 체크포인트로 판단했다.
+- EN: Based on repeated testing, this is treated as a late-stage difficulty checkpoint that may take around eight minutes of attempts.
+- KR: 이 상태는 최종 맵이 아니라 Stage01 후반 난이도 체크포인트다.
+- EN: This state is a late Stage01 difficulty checkpoint, not the final map.
+- KR: 기본 모드는 체크포인트 없이 시작점 리스폰 구조를 유지했다.
+- EN: Kept the default mode on start-position respawn without checkpoints.
+- KR: 기존 발사 이동, 벽 반발 수치, 카메라 추적, 리스폰, 타이머, 메뉴/일시정지, 설정, Stage Clear 로직은 건드리지 않았다.
+- EN: Left existing launch movement, wall bounce tuning, camera follow, respawn, timer, menu/pause, settings, and Stage Clear logic untouched.
+- KR: `Codex/scene_request.json`은 안전 템플릿 상태를 유지했다.
+- EN: Kept `Codex/scene_request.json` in the safe template state.
